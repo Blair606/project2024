@@ -10,6 +10,22 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import DashboardHeader from '../../components/DashboardHeader';
+import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
+import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+
+interface Student {
+  id: string;
+  name: string;
+  performance: number;
+}
+
+interface ClassData {
+  className: string;
+  totalStudents: number;
+  averagePerformance: number;
+  students: Student[];
+}
 
 const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -92,6 +108,42 @@ const TeacherDashboard = () => {
     activeDiscussions: 5,
   });
 
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [isDiscussionModalOpen, setIsDiscussionModalOpen] = useState(false);
+
+  const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
+  const [showIndividualStudent, setShowIndividualStudent] = useState(false);
+
+  const handleCreateAssignment = (assignmentData: any) => {
+    const newAssignment = {
+      id: assignments.length + 1,
+      ...assignmentData,
+      status: 'Active',
+      submissions: 0,
+      totalStudents: courses.find(c => c.id.toString() === assignmentData.course)?.students || 0,
+    };
+
+    setAssignments([...assignments, newAssignment]);
+  };
+
+  const handleCreateDiscussionGroup = (groupData: any) => {
+    const selectedCourse = courses.find(c => c.id.toString() === groupData.course);
+    const studentsPerGroup = Math.ceil(
+      (selectedCourse?.students || 0) / groupData.numberOfGroups
+    );
+
+    const newGroups = Array.from({ length: groupData.numberOfGroups }, (_, index) => ({
+      id: discussionGroups.length + index + 1,
+      name: `${groupData.title} - Group ${index + 1}`,
+      course: selectedCourse?.name || '',
+      members: studentsPerGroup,
+      lastActive: 'Just created',
+      topics: 0,
+    }));
+
+    setDiscussionGroups([...discussionGroups, ...newGroups]);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'discussions':
@@ -99,7 +151,10 @@ const TeacherDashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Discussion Groups</h2>
-              <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button
+                onClick={() => setIsDiscussionModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 New Group
               </button>
@@ -146,7 +201,10 @@ const TeacherDashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Assignments</h2>
-              <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button
+                onClick={() => setIsAssignmentModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 Create Assignment
               </button>
@@ -311,6 +369,73 @@ const TeacherDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Class Overview Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {courses.map((classData) => (
+                <div 
+                  key={classData.id}
+                  className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition"
+                  onClick={() => setSelectedClass({
+                    className: classData.name,
+                    totalStudents: classData.students,
+                    averagePerformance: classData.progress,
+                    students: []
+                  })}
+                >
+                  <h3 className="text-xl font-bold mb-4">{classData.name}</h3>
+                  <p>Total Students: {classData.students}</p>
+                  <p>Average Performance: {classData.progress}%</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Analytics Section */}
+            {selectedClass && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold">{selectedClass.className} Analytics</h2>
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                    onClick={() => setShowIndividualStudent(!showIndividualStudent)}
+                  >
+                    {showIndividualStudent ? 'Show Class Overview' : 'Show Individual Students'}
+                  </button>
+                </div>
+
+                {/* Class Performance Chart */}
+                {!showIndividualStudent ? (
+                  <BarChart
+                    width={1000}
+                    height={400}
+                    data={[selectedClass]}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="className" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="averagePerformance" fill="#8884d8" name="Class Average Performance" />
+                  </BarChart>
+                ) : (
+                  // Individual Students Performance Chart
+                  <BarChart
+                    width={1000}
+                    height={400}
+                    data={selectedClass.students}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="performance" fill="#82ca9d" name="Student Performance" />
+                  </BarChart>
+                )}
+              </div>
+            )}
           </div>
         );
     }
@@ -320,54 +445,74 @@ const TeacherDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader userRole="Teacher" userName="Prof. Smith" />
       
-      {/* Sidebar */}
+      {/* Enhanced Sidebar */}
       <div className="fixed w-64 h-full bg-white shadow-lg">
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-gray-800">Teacher Portal</h2>
-          <nav className="mt-8 space-y-2">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center p-3 text-gray-700 hover:bg-blue-50 rounded-lg ${
-                activeTab === 'overview' ? 'bg-blue-50' : ''
-              }`}
-            >
-              <BookOpenIcon className="w-5 h-5 mr-3" />
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('discussions')}
-              className={`w-full flex items-center p-3 text-gray-700 hover:bg-blue-50 rounded-lg ${
-                activeTab === 'discussions' ? 'bg-blue-50' : ''
-              }`}
-            >
-              <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3" />
-              Discussions
-            </button>
-            <button
-              onClick={() => setActiveTab('assignments')}
-              className={`w-full flex items-center p-3 text-gray-700 hover:bg-blue-50 rounded-lg ${
-                activeTab === 'assignments' ? 'bg-blue-50' : ''
-              }`}
-            >
-              <DocumentCheckIcon className="w-5 h-5 mr-3" />
-              Assignments
-            </button>
-            <a href="#" className="flex items-center p-3 text-gray-700 hover:bg-blue-50 rounded-lg">
-              <UsersIcon className="w-5 h-5 mr-3" />
-              Students
-            </a>
-            <a href="#" className="flex items-center p-3 text-gray-700 hover:bg-blue-50 rounded-lg">
-              <ChartBarIcon className="w-5 h-5 mr-3" />
-              Analytics
-            </a>
+        <div className="p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+              <AcademicCapIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Teacher Portal</h2>
+              <p className="text-sm text-gray-500">Spring 2024</p>
+            </div>
+          </div>
+          <div className="h-0.5 bg-gray-100 w-full mb-6"></div>
+          <nav className="space-y-2">
+            {[
+              { id: 'overview', icon: BookOpenIcon, label: 'Overview' },
+              { id: 'discussions', icon: ChatBubbleLeftRightIcon, label: 'Discussions' },
+              { id: 'assignments', icon: DocumentCheckIcon, label: 'Assignments' },
+              { id: 'students', icon: UsersIcon, label: 'Students' },
+              { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
+            ].map((item) => (
+              <a
+                key={item.id}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveTab(item.id);
+                }}
+                className={`flex items-center p-3 rounded-xl transition-all duration-200
+                  ${activeTab === item.id 
+                    ? 'bg-blue-500 text-white shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
+              >
+                <item.icon className={`w-5 h-5 mr-3 ${activeTab === item.id ? 'text-white' : ''}`} />
+                <span className="font-medium">{item.label}</span>
+              </a>
+            ))}
           </nav>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Enhanced Main Content */}
       <div className="ml-64 pt-16 p-8">
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-2xl shadow-lg">
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
+            <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
+          </div>
+        </div>
+        
         {renderContent()}
       </div>
+
+      {/* Modals */}
+      <CreateAssignmentModal
+        isOpen={isAssignmentModalOpen}
+        onClose={() => setIsAssignmentModalOpen(false)}
+        courses={courses}
+        onSubmit={handleCreateAssignment}
+      />
+
+      <CreateDiscussionGroupModal
+        isOpen={isDiscussionModalOpen}
+        onClose={() => setIsDiscussionModalOpen(false)}
+        courses={courses}
+        onSubmit={handleCreateDiscussionGroup}
+      />
     </div>
   );
 };
