@@ -4,6 +4,7 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 interface DashboardHeaderProps {
   userRole: string;
   userName?: string;
+  userTitle?: string;
 }
 
 const DashboardHeader = ({ userRole, userName = 'User' }: DashboardHeaderProps) => {
