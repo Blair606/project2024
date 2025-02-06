@@ -25,7 +25,7 @@ const HomePage = () => {
     },
     {
       title: 'Parent Portal',
-      description: 'Monitor your child\'s progress and manage payments',
+      description: 'Monitor your child\'s progress and manage finances',
       icon: UserGroupIcon,
       path: '/dashboard/parent',
       color: 'bg-purple-500 hover:bg-purple-600',
@@ -39,8 +39,8 @@ const HomePage = () => {
         <div className="max-w-[95%] mx-auto px-2 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <img src="/logo.svg" alt="EduPortal" className="h-8 w-auto" />
-              <span className="text-xl font-bold text-gray-900">EduPortal</span>
+              <img src="/logo.png.png" alt="EduPortal" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-gray-900">Edu Portal</span>
             </div>
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>

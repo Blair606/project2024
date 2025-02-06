@@ -13,6 +13,7 @@ import DashboardHeader from '../../components/DashboardHeader';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
 import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { Assignment } from '../../store/slices/assignmentSlice';
 
 interface Student {
   id: string;
@@ -27,6 +28,12 @@ interface ClassData {
   students: Student[];
 }
 
+interface DiscussionGroupData {
+  title: string;
+  course: string;
+  numberOfGroups: number;
+}
+
 const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [courses] = useState([
@@ -35,7 +42,7 @@ const TeacherDashboard = () => {
     { id: 3, name: 'Physics 101', students: 28, nextClass: '1:15 PM Tomorrow', progress: 80 },
   ]);
 
-  const [discussionGroups] = useState([
+  const [discussionGroups, setDiscussionGroups] = useState([
     {
       id: 1,
       name: 'Math Problem Solving',
@@ -62,7 +69,7 @@ const TeacherDashboard = () => {
     },
   ]);
 
-  const [assignments] = useState([
+  const [assignments, setAssignments] = useState([
     {
       id: 1,
       title: 'Calculus Quiz',
@@ -114,19 +121,20 @@ const TeacherDashboard = () => {
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
   const [showIndividualStudent, setShowIndividualStudent] = useState(false);
 
-  const handleCreateAssignment = (assignmentData: any) => {
+  const handleCreateAssignment = (assignmentData: Assignment) => {
     const newAssignment = {
-      id: assignments.length + 1,
       ...assignmentData,
+      id: assignments.length + 1,
       status: 'Active',
       submissions: 0,
-      totalStudents: courses.find(c => c.id.toString() === assignmentData.course)?.students || 0,
+      course: courses.find(c => c.id === assignmentData.courseId)?.name || '',
+      totalStudents: courses.find(c => c.id === assignmentData.courseId)?.students || 0,
     };
 
     setAssignments([...assignments, newAssignment]);
   };
 
-  const handleCreateDiscussionGroup = (groupData: any) => {
+  const handleCreateDiscussionGroup = (groupData: DiscussionGroupData) => {
     const selectedCourse = courses.find(c => c.id.toString() === groupData.course);
     const studentsPerGroup = Math.ceil(
       (selectedCourse?.students || 0) / groupData.numberOfGroups

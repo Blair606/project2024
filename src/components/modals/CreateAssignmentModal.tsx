@@ -1,23 +1,30 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Assignment } from '../../store/slices/assignmentSlice';    
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   courses: Array<{ id: number; name: string }>;
-  onSubmit: (assignmentData: any) => void;
+  onSubmit: (assignmentData: Assignment) => void;
 }
 
+
+
 const CreateAssignmentModal = ({ isOpen, onClose, courses, onSubmit }: CreateAssignmentModalProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Assignment>({
+    id: 0,
     title: '',
-    course: '',
+    courseId: 0,
+    courseName: '',
     type: 'Assignment',
     dueDate: '',
     description: '',
     totalPoints: 100,
-    attachments: [],
+    status: 'Draft',
+    submissions: 0,
+    totalStudents: 0
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,8 +84,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, courses, onSubmit }: CreateAss
                     <select
                       required
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                      value={formData.course}
-                      onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+                      value={formData.courseId.toString()}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        courseId: Number(e.target.value),
+                        courseName: courses.find(c => c.id === Number(e.target.value))?.name || ''
+                      })}
                     >
                       <option value="">Select Course</option>
                       {courses.map((course) => (
