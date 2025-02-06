@@ -8,30 +8,57 @@ import {
   DocumentCheckIcon,
   AcademicCapIcon,
   PlusIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 import DashboardHeader from '../../components/DashboardHeader';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
 import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Assignment } from '../../store/slices/assignmentSlice';
-
-interface Student {
-  id: string;
-  name: string;
-  performance: number;
-}
+import {
+  LineChart, Line, PieChart, Pie, Cell,
+} from 'recharts';
 
 interface ClassData {
+  id: number;
+  year: number;
   className: string;
   totalStudents: number;
   averagePerformance: number;
-  students: Student[];
+  students: StudentAnalytics[];
 }
 
 interface DiscussionGroupData {
   title: string;
   course: string;
   numberOfGroups: number;
+}
+
+interface StudentAnalytics {
+  id: string;
+  name: string;
+  grades: {
+    unit: string;
+    grade: number;
+    attendance: number;
+    submissions: number;
+  }[];
+}
+
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  classId: number;
+  timestamp: string;
+  emailNotification: boolean;
+}
+
+interface NotificationFormData {
+  title: string;
+  message: string;
+  classId: number;
+  emailNotification: boolean;
 }
 
 const TeacherDashboard = () => {
@@ -118,8 +145,13 @@ const TeacherDashboard = () => {
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const [isDiscussionModalOpen, setIsDiscussionModalOpen] = useState(false);
 
-  const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
+  const [selectedClassOverview, setSelectedClassOverview] = useState<ClassData | null>(null);
   const [showIndividualStudent, setShowIndividualStudent] = useState(false);
+
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const GRADE_COLORS = ['#4CAF50', '#8BC34A', '#FFC107', '#FF9800', '#F44336'];
 
   const handleCreateAssignment = (assignmentData: Assignment) => {
     const newAssignment = {
@@ -150,6 +182,69 @@ const TeacherDashboard = () => {
     }));
 
     setDiscussionGroups([...discussionGroups, ...newGroups]);
+  };
+
+  const [classes] = useState<ClassData[]>([
+    {
+      id: 1,
+      year: 1,
+      className: "Year 1 - Advanced Mathematics",
+      totalStudents: 30,
+      averagePerformance: 75,
+      students: [
+        {
+          id: "1",
+          name: "John Doe",
+          grades: [
+            { unit: "Calculus", grade: 85, attendance: 90, submissions: 8 },
+            { unit: "Algebra", grade: 78, attendance: 85, submissions: 7 }
+          ]
+        },
+        // Add more students...
+      ]
+    },
+    {
+      id: 2,
+      year: 2,
+      className: "Year 2 - Computer Science",
+      totalStudents: 25,
+      averagePerformance: 82,
+      students: [
+        {
+          id: "2",
+          name: "Jane Smith",
+          grades: [
+            { unit: "Programming", grade: 92, attendance: 95, submissions: 9 },
+            { unit: "Algorithms", grade: 88, attendance: 92, submissions: 8 }
+          ]
+        },
+        // Add more students...
+      ]
+    },
+    // Add more classes...
+  ]);
+
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+
+  const selectedClass = classes.find(c => c.id === selectedClassId);
+  const selectedStudent = selectedClass?.students.find(s => s.id === selectedStudentId);
+
+  const handleSendNotification = async (data: NotificationFormData) => {
+    const newNotification: Notification = {
+      id: notifications.length + 1,
+      ...data,
+      timestamp: new Date().toISOString(),
+    };
+
+    setNotifications([newNotification, ...notifications]);
+
+    if (data.emailNotification) {
+      const selectedClass = classes.find(c => c.id === data.classId);
+      console.log(`Sending email to ${selectedClass?.className} students:`, data.message);
+    }
+
+    setIsNotificationModalOpen(false);
   };
 
   const renderContent = () => {
@@ -287,6 +382,180 @@ const TeacherDashboard = () => {
           </div>
         );
 
+      case 'analytics':
+        return (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-semibold mb-6">Analytics Dashboard</h2>
+
+            {/* Class Selection */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="flex space-x-4 mb-6">
+                <select
+                  className="form-select rounded-md border-gray-300"
+                  value={selectedClassId || ''}
+                  onChange={(e) => {
+                    setSelectedClassId(Number(e.target.value));
+                    setSelectedStudentId(null);
+                  }}
+                >
+                  <option value="">Select Class</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.className}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedClassId && (
+                  <select
+                    className="form-select rounded-md border-gray-300"
+                    value={selectedStudentId || ''}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                  >
+                    <option value="">All Students</option>
+                    {selectedClass?.students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {selectedClassId && !selectedStudentId && (
+                <>
+                  {/* Class Overview Charts */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm">
+                      <h3 className="text-lg font-semibold mb-4">Class Performance</h3>
+                      <BarChart
+                        width={500}
+                        height={300}
+                        data={selectedClass?.students.map(student => ({
+                          name: student.name,
+                          average: student.grades.reduce((acc, curr) => acc + curr.grade, 0) / student.grades.length,
+                          attendance: student.grades.reduce((acc, curr) => acc + curr.attendance, 0) / student.grades.length
+                        }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="average" name="Average Grade" fill="#8884d8" />
+                        <Bar dataKey="attendance" name="Attendance %" fill="#82ca9d" />
+                      </BarChart>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl shadow-sm">
+                      <h3 className="text-lg font-semibold mb-4">Unit Performance Distribution</h3>
+                      <PieChart width={400} height={300}>
+                        <Pie
+                          data={[
+                            { name: 'A (90-100)', value: selectedClass?.students.filter(s => 
+                              s.grades.some(g => g.grade >= 90)).length || 0 },
+                            { name: 'B (80-89)', value: selectedClass?.students.filter(s => 
+                              s.grades.some(g => g.grade >= 80 && g.grade < 90)).length || 0 },
+                            { name: 'C (70-79)', value: selectedClass?.students.filter(s => 
+                              s.grades.some(g => g.grade >= 70 && g.grade < 80)).length || 0 },
+                            { name: 'D (60-69)', value: selectedClass?.students.filter(s => 
+                              s.grades.some(g => g.grade >= 60 && g.grade < 70)).length || 0 },
+                            { name: 'F (<60)', value: selectedClass?.students.filter(s => 
+                              s.grades.some(g => g.grade < 60)).length || 0 },
+                          ]}
+                          dataKey="value"
+                          nameKey="name"
+                          cx={200}
+                          cy={150}
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={100}
+                        >
+                          {GRADE_COLORS.map((color, index) => (
+                            <Cell key={`cell-${index}`} fill={color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedStudentId && (
+                <>
+                  {/* Individual Student Analytics */}
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-semibold">
+                      Student Analysis: {selectedStudent?.name}
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-white p-6 rounded-xl shadow-sm">
+                        <h4 className="text-lg font-semibold mb-4">Performance by Unit</h4>
+                        <BarChart
+                          width={500}
+                          height={300}
+                          data={selectedStudent?.grades}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="unit" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="grade" name="Grade" fill="#8884d8" />
+                          <Bar dataKey="attendance" name="Attendance" fill="#82ca9d" />
+                        </BarChart>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-xl shadow-sm">
+                        <h4 className="text-lg font-semibold mb-4">Submission Analysis</h4>
+                        <LineChart
+                          width={500}
+                          height={300}
+                          data={selectedStudent?.grades}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="unit" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="submissions" name="Submissions" stroke="#8884d8" />
+                        </LineChart>
+                      </div>
+                    </div>
+
+                    {/* Student Metrics Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[
+                        {
+                          label: 'Average Grade',
+                          value: `${(selectedStudent?.grades.reduce((acc, curr) => acc + curr.grade, 0) || 0 / 
+                            (selectedStudent?.grades.length || 1)).toFixed(1)}%`
+                        },
+                        {
+                          label: 'Average Attendance',
+                          value: `${(selectedStudent?.grades.reduce((acc, curr) => acc + curr.attendance, 0) || 0 / 
+                            (selectedStudent?.grades.length || 1)).toFixed(1)}%`
+                        },
+                        {
+                          label: 'Total Submissions',
+                          value: selectedStudent?.grades.reduce((acc, curr) => acc + curr.submissions, 0) || 0
+                        }
+                      ].map((metric, index) => (
+                        <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
+                          <h4 className="text-sm text-gray-500">{metric.label}</h4>
+                          <div className="text-2xl font-bold mt-2">{metric.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="space-y-6">
@@ -384,7 +653,9 @@ const TeacherDashboard = () => {
                 <div 
                   key={classData.id}
                   className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition"
-                  onClick={() => setSelectedClass({
+                  onClick={() => setSelectedClassOverview({
+                    id: classData.id,
+                    year: 1,
                     className: classData.name,
                     totalStudents: classData.students,
                     averagePerformance: classData.progress,
@@ -399,10 +670,10 @@ const TeacherDashboard = () => {
             </div>
 
             {/* Analytics Section */}
-            {selectedClass && (
+            {selectedClassOverview && (
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold">{selectedClass.className} Analytics</h2>
+                  <h2 className="text-2xl font-bold">{selectedClassOverview.className} Analytics</h2>
                   <button
                     className="bg-blue-500 text-white px-4 py-2 rounded"
                     onClick={() => setShowIndividualStudent(!showIndividualStudent)}
@@ -416,7 +687,7 @@ const TeacherDashboard = () => {
                   <BarChart
                     width={1000}
                     height={400}
-                    data={[selectedClass]}
+                    data={[selectedClassOverview]}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -431,7 +702,7 @@ const TeacherDashboard = () => {
                   <BarChart
                     width={1000}
                     height={400}
-                    data={selectedClass.students}
+                    data={selectedClassOverview.students}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -499,8 +770,19 @@ const TeacherDashboard = () => {
       <div className="ml-64 pt-16 p-8">
         <div className="mb-8">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-2xl shadow-lg">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
-            <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
+                <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
+              </div>
+              <button
+                onClick={() => setIsNotificationModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50"
+              >
+                <EnvelopeIcon className="w-5 h-5 mr-2" />
+                Send Class Message
+              </button>
+            </div>
           </div>
         </div>
         
@@ -521,6 +803,110 @@ const TeacherDashboard = () => {
         courses={courses}
         onSubmit={handleCreateDiscussionGroup}
       />
+
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        onSubmit={handleSendNotification}
+        classes={classes}
+      />
+    </div>
+  );
+};
+
+const NotificationModal = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  classes 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onSubmit: (data: NotificationFormData) => void;
+  classes: { id: number; className: string }[];
+}) => {
+  const [formData, setFormData] = useState<NotificationFormData>({
+    title: '',
+    message: '',
+    classId: 0,
+    emailNotification: true,
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Send Class Notification</h3>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit(formData);
+            setFormData({ title: '', message: '', classId: 0, emailNotification: true });
+          }}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Select Class</label>
+              <select
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.classId}
+                onChange={(e) => setFormData({ ...formData, classId: Number(e.target.value) })}
+                required
+              >
+                <option value="">Select a class</option>
+                {classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>{cls.className}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                type="text"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Message</label>
+              <textarea
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                rows={4}
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  checked={formData.emailNotification}
+                  onChange={(e) => setFormData({ ...formData, emailNotification: e.target.checked })}
+                />
+                <span className="ml-2 text-sm text-gray-600">Send email notification</span>
+              </label>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
