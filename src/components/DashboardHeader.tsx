@@ -1,43 +1,61 @@
-import { useNavigate } from 'react-router-dom';
-import { HomeIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import {
+  BellIcon,
+  UserCircleIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 
-interface DashboardHeaderProps {
-  userRole: string;
-  userName?: string;
-  userTitle?: string;
-}
-
-const DashboardHeader = ({ userRole, userName = 'User' }: DashboardHeaderProps) => {
-  const navigate = useNavigate();
+const DashboardHeader = ({ userRole, userName }: { userRole: string; userName: string }) => {
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm fixed top-0 left-64 right-0 z-10">
-      <div className="px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2.5 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 text-gray-600"
-            title="Return to Home"
-          >
-            <HomeIcon className="w-5 h-5" />
-          </button>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-600">
-              {userRole} Portal
-            </span>
-            <span className="text-sm text-gray-400">•</span>
-            <span className="text-sm text-blue-600">Spring 2024</span>
-          </div>
+    <header className="fixed top-0 right-0 w-full bg-white shadow-sm z-40">
+      <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        {/* Left side - Brand/Logo (hidden on mobile when menu is shown) */}
+        <div className="hidden lg:flex items-center">
+          <span className="text-xl font-bold text-gray-800">School Portal</span>
         </div>
-        
-        <div className="flex items-center space-x-6">
-          <span className="text-sm font-medium text-gray-700">Welcome back, {userName}</span>
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
-          >
-            Sign Out
+
+        {/* Right side - Notifications and Profile */}
+        <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
+          {/* Notifications */}
+          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <BellIcon className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
+
+          {/* Profile Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <UserCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600" />
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-medium text-gray-700">{userName}</p>
+                <p className="text-xs text-gray-500">{userRole}</p>
+              </div>
+            </button>
+
+            {/* Dropdown Menu */}
+            {isProfileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <UserCircleIcon className="w-5 h-5 mr-2" />
+                  Profile
+                </button>
+                <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <Cog6ToothIcon className="w-5 h-5 mr-2" />
+                  Settings
+                </button>
+                <div className="h-px bg-gray-200 my-1"></div>
+                <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center">
+                  <ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

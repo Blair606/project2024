@@ -9,6 +9,8 @@ import {
   AcademicCapIcon,
   PlusIcon,
   EnvelopeIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import DashboardHeader from '../../components/DashboardHeader';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
@@ -152,6 +154,16 @@ const TeacherDashboard = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const GRADE_COLORS = ['#4CAF50', '#8BC34A', '#FFC107', '#FF9800', '#F44336'];
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const navItems = [
+    { id: 'overview', icon: BookOpenIcon, label: 'Overview' },
+    { id: 'discussions', icon: ChatBubbleLeftRightIcon, label: 'Discussions' },
+    { id: 'assignments', icon: DocumentCheckIcon, label: 'Assignments' },
+    { id: 'students', icon: UsersIcon, label: 'Students' },
+    { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
+  ];
 
   const handleCreateAssignment = (assignmentData: Assignment) => {
     const newAssignment = {
@@ -722,10 +734,59 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userRole="Teacher" userName="Prof. Smith" />
-      
-      {/* Enhanced Sidebar */}
-      <div className="fixed w-64 h-full bg-white shadow-lg">
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-40">
+        <div className="flex items-center justify-between px-4 h-16">
+          {/* Left side - Menu button and logo */}
+          <div className="flex items-center lg:w-64">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
+            <div className="lg:hidden ml-2">
+              <AcademicCapIcon className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
+
+          {/* Right side - Actions and profile */}
+          <div className="flex items-center justify-end flex-1 space-x-4">
+            <div className="hidden sm:flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Spring 2024</span>
+              <span className="text-gray-300">|</span>
+            </div>
+            <button
+              onClick={() => setIsNotificationModalOpen(true)}
+              className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <EnvelopeIcon className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Send Message</span>
+            </button>
+            <div className="flex items-center border-l pl-4 ml-4">
+              <div className="hidden sm:block text-right mr-3">
+                <p className="text-sm font-medium text-gray-900">Prof. Smith</p>
+                <p className="text-xs text-gray-500">Teacher</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-sm font-medium text-blue-600">PS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          className="lg:hidden absolute right-4 top-4 p-2 rounded-md text-gray-600 hover:bg-gray-100"
+        >
+          <XMarkIcon className="h-6 w-6" />
+        </button>
+
         <div className="p-6">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
@@ -738,19 +799,14 @@ const TeacherDashboard = () => {
           </div>
           <div className="h-0.5 bg-gray-100 w-full mb-6"></div>
           <nav className="space-y-2">
-            {[
-              { id: 'overview', icon: BookOpenIcon, label: 'Overview' },
-              { id: 'discussions', icon: ChatBubbleLeftRightIcon, label: 'Discussions' },
-              { id: 'assignments', icon: DocumentCheckIcon, label: 'Assignments' },
-              { id: 'students', icon: UsersIcon, label: 'Students' },
-              { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
-            ].map((item) => (
+            {navItems.map((item) => (
               <a
                 key={item.id}
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveTab(item.id);
+                  setIsSidebarOpen(false);
                 }}
                 className={`flex items-center p-3 rounded-xl transition-all duration-200
                   ${activeTab === item.id 
@@ -764,32 +820,34 @@ const TeacherDashboard = () => {
             ))}
           </nav>
         </div>
-      </div>
+      </aside>
 
-      {/* Enhanced Main Content */}
-      <div className="ml-64 pt-16 p-8">
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-2xl shadow-lg">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
-                <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
+      <main className={`transition-all duration-300 pt-16 min-h-screen ${
+        isSidebarOpen ? 'lg:ml-64' : 'lg:ml-64'
+      }`}>
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
+                  <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
+                </div>
+                <button
+                  onClick={() => setIsNotificationModalOpen(true)}
+                  className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 w-full sm:w-auto justify-center"
+                >
+                  <EnvelopeIcon className="w-5 h-5 mr-2" />
+                  Send Class Message
+                </button>
               </div>
-              <button
-                onClick={() => setIsNotificationModalOpen(true)}
-                className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50"
-              >
-                <EnvelopeIcon className="w-5 h-5 mr-2" />
-                Send Class Message
-              </button>
             </div>
           </div>
+          
+          {renderContent()}
         </div>
-        
-        {renderContent()}
-      </div>
+      </main>
 
-      {/* Modals */}
       <CreateAssignmentModal
         isOpen={isAssignmentModalOpen}
         onClose={() => setIsAssignmentModalOpen(false)}

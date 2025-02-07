@@ -13,11 +13,14 @@ import {
   BookmarkIcon,
   DocumentIcon,
   DocumentPlusIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import DashboardHeader from '../../components/DashboardHeader';
 
 const StudentDashboard = () => {
   const [activeMenu, setActiveMenu] = useState('courses');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [currentUnits] = useState([
     {
@@ -252,7 +255,7 @@ const StudentDashboard = () => {
         return (
           <div className="space-y-6">
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {quickStats.map((stat) => (
                 <div key={stat.id} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex items-center justify-between">
@@ -374,9 +377,8 @@ const StudentDashboard = () => {
 
       case 'schedule':
         return (
-          <div className="space-y-6">
-            {/* Weekly Timetable */}
-            <div className="bg-white p-6 rounded-xl shadow-sm">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm overflow-x-auto">
               <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
                 <CalendarIcon className="w-5 h-5 mr-2 text-blue-500" />
                 Weekly Timetable
@@ -757,8 +759,26 @@ const StudentDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader userRole="Student" userName={profileData.name} />
       
-      {/* Enhanced Sidebar */}
-      <div className="fixed w-64 h-full bg-white shadow-lg">
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 rounded-lg bg-white shadow-lg text-gray-700 hover:bg-gray-50"
+        >
+          {isMobileMenuOpen ? (
+            <XMarkIcon className="w-6 h-6" />
+          ) : (
+            <Bars3Icon className="w-6 h-6" />
+          )}
+        </button>
+      </div>
+
+      {/* Sidebar - Desktop & Mobile */}
+      <div className={`
+        fixed w-64 h-full bg-white shadow-lg transition-transform duration-300 z-40
+        lg:translate-x-0 
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
         <div className="p-6">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
@@ -778,6 +798,7 @@ const StudentDashboard = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveMenu(item.id);
+                  setIsMobileMenuOpen(false); // Close mobile menu when item is selected
                 }}
                 className={`flex items-center p-3 rounded-xl transition-all duration-200
                   ${activeMenu === item.id 
@@ -793,16 +814,35 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* Enhanced Main Content */}
-      <div className="ml-64 pt-16 p-8">
+      {/* Overlay for mobile menu */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Main Content - Adaptive padding */}
+      <div className={`
+        pt-20 p-4 sm:p-6 lg:p-8
+        lg:ml-64 transition-all duration-300
+        ${isMobileMenuOpen ? 'ml-64' : 'ml-0'}
+      `}>
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-2xl shadow-lg">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {profileData.name.split(' ')[0]}!</h1>
-            <p className="text-blue-100">Your learning journey continues. Keep up the excellent work in {profileData.course}!</p>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-lg">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              Welcome back, {profileData.name.split(' ')[0]}!
+            </h1>
+            <p className="text-blue-100 text-sm sm:text-base">
+              Your learning journey continues. Keep up the excellent work in {profileData.course}!
+            </p>
           </div>
         </div>
-        
-        {renderContent()}
+
+        {/* Update grid layouts in renderContent */}
+        <div className="w-full">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
