@@ -8,9 +8,7 @@ import {
   BellIcon,
   ChartBarIcon,
   BanknotesIcon,
-  ArrowTrendingUpIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
   UserCircleIcon,
   BookmarkIcon,
   DocumentIcon,
@@ -116,11 +114,6 @@ const StudentDashboard = () => {
     }
   ]);
 
-  const [upcomingTasks] = useState([
-    { id: 1, title: 'Math Assignment', due: '2024-03-20', course: 'Advanced Mathematics' },
-    { id: 2, title: 'Programming Project', due: '2024-03-22', course: 'Computer Science' },
-  ]);
-
   const [notifications] = useState([
     { id: 1, message: 'Your Math assignment has been graded', teacher: 'Dr. Smith', time: '1 hour ago' },
     { id: 2, message: 'New study materials uploaded for Computer Science', teacher: 'Prof. Johnson', time: '3 hours ago' },
@@ -141,6 +134,45 @@ const StudentDashboard = () => {
       { course: 'Advanced Mathematics', grade: 'A', percentage: 92 },
       { course: 'Computer Science', grade: 'A-', percentage: 88 },
     ],
+    semesterHistory: [
+      {
+        semester: '1st Year, 1st Sem',
+        units: [
+          { name: 'Introduction to Programming', grade: 75, letterGrade: 'A' },
+          { name: 'Calculus I', grade: 65, letterGrade: 'B' },
+          { name: 'Physics', grade: 35, letterGrade: 'E', status: 'retake' }
+        ],
+        averageGrade: 58.3
+      },
+      {
+        semester: '1st Year, 2nd Sem',
+        units: [
+          { name: 'Data Structures', grade: 82, letterGrade: 'A' },
+          { name: 'Physics', grade: 68, letterGrade: 'B' }, // Retake passed
+          { name: 'Statistics', grade: 71, letterGrade: 'A' }
+        ],
+        averageGrade: 73.7
+      },
+      {
+        semester: '2nd Year, 1st Sem',
+        units: [
+          { name: 'Database Systems', grade: 88, letterGrade: 'A' },
+          { name: 'Operating Systems', grade: 63, letterGrade: 'B' },
+          { name: 'Computer Networks', grade: 45, letterGrade: 'D' }
+        ],
+        averageGrade: 65.3
+      }
+    ],
+    retakes: [
+      {
+        unit: 'Physics',
+        originalGrade: 35,
+        improvedGrade: 68,
+        originalSemester: '1st Year, 1st Sem',
+        retakeSemester: '1st Year, 2nd Sem',
+        status: 'Completed'
+      }
+    ]
   });
 
   // Update profile data
@@ -151,8 +183,8 @@ const StudentDashboard = () => {
     year: '3rd Year, 2nd Semester',
     email: 'bildard.blair@university.edu',
     achievements: [
-      { id: 1, title: 'Dean\'s List 2023', icon: '🏆' },
-      { id: 2, title: 'Best Programming Project', icon: '��' },
+      { id: 1, title: 'Dean\'s List 2023', icon: '��' },
+      { id: 2, title: 'Best Programming Project', icon: '' },
       { id: 3, title: 'Research Excellence', icon: '🔬' },
     ]
   });
@@ -460,29 +492,107 @@ const StudentDashboard = () => {
 
       case 'academic':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="col-span-2 bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-              <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
-                <ChartBarIcon className="w-5 h-5 mr-2 text-blue-500" />
-                Academic Progress
-              </h2>
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
-                  <p className="text-sm font-medium text-blue-600 mb-1">Current GPA</p>
-                  <p className="text-3xl font-bold text-blue-700">{academicResults.gpa}</p>
+          <div className="space-y-6">
+            {/* Performance Graph */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h2 className="text-xl font-semibold mb-6">Academic Performance Trend</h2>
+              <div className="h-80 relative">
+                {/* Grade Range Indicators */}
+                <div className="absolute left-0 top-0 h-full w-16 flex flex-col justify-between text-sm text-gray-500">
+                  <span>100%</span>
+                  <span className="text-green-500">70% - A</span>
+                  <span className="text-blue-500">60% - B</span>
+                  <span className="text-yellow-500">50% - C</span>
+                  <span className="text-orange-500">40% - D</span>
+                  <span className="text-red-500">0% - E</span>
                 </div>
-                <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
-                  <p className="text-sm font-medium text-green-600 mb-1">Total Credits</p>
-                  <p className="text-3xl font-bold text-green-700">{academicResults.totalCredits}</p>
+                
+                {/* Graph Area */}
+                <div className="ml-16 h-full relative">
+                  {/* Grade Range Background */}
+                  <div className="absolute inset-0 flex flex-col">
+                    <div className="h-3/10 bg-green-50" /> {/* A range */}
+                    <div className="h-1/10 bg-blue-50" />  {/* B range */}
+                    <div className="h-1/10 bg-yellow-50" /> {/* C range */}
+                    <div className="h-1/10 bg-orange-50" /> {/* D range */}
+                    <div className="h-4/10 bg-red-50" />   {/* E range */}
+                  </div>
+                  
+                  {/* Line Graph */}
+                  <div className="absolute inset-0">
+                    <svg className="w-full h-full">
+                      <path
+                        d={academicResults.semesterHistory.map((sem, index) => {
+                          const x = (index / (academicResults.semesterHistory.length - 1)) * 100;
+                          const y = 100 - sem.averageGrade;
+                          return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                        }).join(' ')}
+                        fill="none"
+                        stroke="#4F46E5"
+                        strokeWidth="2"
+                      />
+                      {academicResults.semesterHistory.map((sem, index) => (
+                        <circle
+                          key={index}
+                          cx={`${(index / (academicResults.semesterHistory.length - 1)) * 100}%`}
+                          cy={`${100 - sem.averageGrade}%`}
+                          r="4"
+                          fill="#4F46E5"
+                        />
+                      ))}
+                    </svg>
+                  </div>
+                  
+                  {/* Semester Labels */}
+                  <div className="absolute bottom-0 w-full flex justify-between text-sm text-gray-500">
+                    {academicResults.semesterHistory.map((sem, index) => (
+                      <span key={index}>{sem.semester}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Retakes Section */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h2 className="text-xl font-semibold mb-6 flex items-center">
+                <span className="text-red-500 mr-2">⚠️</span>
+                Unit Retakes
+                <span className="ml-2 px-2 py-1 text-sm bg-red-100 text-red-600 rounded-full">
+                  {academicResults.retakes.length} Total
+                </span>
+              </h2>
+              
               <div className="space-y-4">
-                {academicResults.currentSemesterGrades.map((course, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">{course.course}</span>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm text-gray-500">{course.percentage}%</span>
-                      <span className="font-bold text-blue-600">{course.grade}</span>
+                {academicResults.retakes.map((retake, index) => (
+                  <div key={index} className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-gray-800">{retake.unit}</h3>
+                        <p className="text-sm text-gray-600">
+                          Original Attempt: {retake.originalSemester}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Retake: {retake.retakeSemester}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm">
+                          Original Grade: 
+                          <span className="font-bold text-red-600 ml-1">
+                            {retake.originalGrade}%
+                          </span>
+                        </p>
+                        <p className="text-sm">
+                          Improved Grade: 
+                          <span className="font-bold text-green-600 ml-1">
+                            {retake.improvedGrade}%
+                          </span>
+                        </p>
+                        <span className="inline-block mt-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                          {retake.status}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -687,7 +797,7 @@ const StudentDashboard = () => {
       <div className="ml-64 pt-16 p-8">
         <div className="mb-8">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-2xl shadow-lg">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {profileData.name.split(' ')[0]}! ��</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {profileData.name.split(' ')[0]}!</h1>
             <p className="text-blue-100">Your learning journey continues. Keep up the excellent work in {profileData.course}!</p>
           </div>
         </div>

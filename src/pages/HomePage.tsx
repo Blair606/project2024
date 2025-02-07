@@ -59,7 +59,7 @@ const HomePage = () => {
         <div className="max-w-[95%] mx-auto px-2 py-16">
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Welcome to EduPortal
+              Welcome to Edu Portal
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Your comprehensive learning management system. Choose your portal to get started.
