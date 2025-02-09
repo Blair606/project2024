@@ -22,6 +22,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import PaymentModal from '../../components/PaymentModal';
 
 const ParentDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -114,6 +115,35 @@ const ParentDashboard = () => {
   });
 
   const [graphView, setGraphView] = useState('semester');
+
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<{
+    amount: number;
+    type?: string;
+    dueDate?: string;
+    mandatory?: boolean;
+  }>({ amount: 0 });
+
+  const handlePayNow = (item: typeof financialOverview[0]) => {
+    setSelectedPayment({
+      amount: item.amount,
+      type: item.type,
+      dueDate: item.dueDate,
+      mandatory: item.mandatory
+    });
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePayAllMandatory = () => {
+    const mandatoryTotal = financialOverview
+      .filter(item => item.mandatory && item.status !== 'Paid')
+      .reduce((sum, item) => sum + item.amount, 0);
+    
+    setSelectedPayment({
+      amount: mandatoryTotal,
+    });
+    setIsPaymentModalOpen(true);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -325,10 +355,19 @@ const ParentDashboard = () => {
         return (
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
-              <h2 className="text-xl font-semibold mb-6 flex items-center">
-                <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-500" />
-                Financial Overview
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-500" />
+                  Financial Overview
+                </h2>
+                <button
+                  onClick={handlePayAllMandatory}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Pay All Mandatory Fees
+                </button>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {financialOverview.map(item => (
                   <div key={item.id} 
@@ -336,9 +375,13 @@ const ParentDashboard = () => {
                                 transition-all duration-200">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mb-2">
                           <h3 className="font-medium">{item.type}</h3>
-                          {!item.mandatory && (
+                          {item.mandatory ? (
+                            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">
+                              Mandatory
+                            </span>
+                          ) : (
                             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                               Optional
                             </span>
@@ -356,6 +399,14 @@ const ParentDashboard = () => {
                         }`}>
                           {item.status}
                         </span>
+                        {item.status !== 'Paid' && (
+                          <button
+                            onClick={() => handlePayNow(item)}
+                            className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Pay Now
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -397,6 +448,18 @@ const ParentDashboard = () => {
                 </table>
               </div>
             </div>
+
+            <PaymentModal
+              isOpen={isPaymentModalOpen}
+              closeModal={() => setIsPaymentModalOpen(false)}
+              amount={selectedPayment.amount}
+              feeDetails={selectedPayment.type ? {
+                type: selectedPayment.type,
+                dueDate: selectedPayment.dueDate || '',
+                mandatory: selectedPayment.mandatory || false
+              } : undefined}
+              isMultipleFees={!selectedPayment.type}
+            />
           </div>
         );
 
