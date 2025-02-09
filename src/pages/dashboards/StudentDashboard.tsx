@@ -124,10 +124,24 @@ const StudentDashboard = () => {
   ]);
 
   const [financialStatus] = useState({
-    tuitionStatus: 'Paid',
-    nextPayment: '2024-04-01',
-    amount: 1500,
-    scholarshipStatus: 'Active',
+    tuitionStatus: 'Pending Payment',
+    semesterFee: 45000,
+    hostelFee: {
+      amount: 15000,
+      status: 'Optional',
+      deadline: '2024-04-01'
+    },
+    retakesFee: {
+      amountPerUnit: 7500,
+      pendingUnits: [
+        { code: 'CS201', name: 'Physics', amount: 7500 }
+      ]
+    },
+    paymentHistory: [
+      { id: 1, type: 'Semester Fee', amount: 45000, date: '2024-01-15', status: 'Paid' },
+      { id: 2, type: 'Hostel Fee', amount: 15000, date: '2024-01-15', status: 'Paid' }
+    ],
+    nextPaymentDeadline: '2024-04-01'
   });
 
   const [academicResults] = useState({
@@ -189,7 +203,13 @@ const StudentDashboard = () => {
       { id: 1, title: 'Dean\'s List 2023', icon: '��' },
       { id: 2, title: 'Best Programming Project', icon: '' },
       { id: 3, title: 'Research Excellence', icon: '🔬' },
-    ]
+    ],
+    currentSemester: {
+      name: '3rd Year, 2nd Semester',
+      status: 'activated', // or 'pending' or 'inactive'
+      activationDate: '2024-01-15',
+      nextPaymentDue: '2024-04-01'
+    }
   });
 
   // Update weekly schedule
@@ -605,26 +625,131 @@ const StudentDashboard = () => {
 
       case 'financial':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="col-span-2 bg-white p-6 rounded-xl shadow-sm">
-              <h2 className="text-xl font-semibold mb-4 flex items-center">
-                <BanknotesIcon className="w-5 h-5 mr-2" />
-                Financial Status
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Tuition Status:</span>
-                  <span className="text-green-500 font-medium">{financialStatus.tuitionStatus}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Next Payment:</span>
-                  <span className="font-medium">${financialStatus.amount} on {financialStatus.nextPayment}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Scholarship:</span>
-                  <span className="text-blue-500 font-medium">{financialStatus.scholarshipStatus}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Financial Summary */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Current Semester Fees */}
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <h2 className="text-xl font-semibold mb-6 flex items-center">
+                  <BanknotesIcon className="w-6 h-6 mr-2 text-blue-500" />
+                  Current Semester Fees
+                </h2>
+                
+                <div className="space-y-4">
+                  {/* Semester Fee */}
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">Semester Fee</span>
+                      <span className="text-lg font-bold">KSH {financialStatus.semesterFee.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Due by {financialStatus.nextPaymentDeadline}</span>
+                      <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                        {financialStatus.tuitionStatus}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Hostel Fee */}
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">Hostel Fee (Optional)</span>
+                      <span className="text-lg font-bold">KSH {financialStatus.hostelFee.amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Due by {financialStatus.hostelFee.deadline}</span>
+                      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+                        {financialStatus.hostelFee.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Retake Fees */}
+                  {financialStatus.retakesFee.pendingUnits.length > 0 && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium mb-3">Pending Retake Fees</h3>
+                      {financialStatus.retakesFee.pendingUnits.map(unit => (
+                        <div key={unit.code} className="flex justify-between items-center mb-2">
+                          <span className="text-gray-600">{unit.code} - {unit.name}</span>
+                          <div className="flex items-center space-x-3">
+                            <span className="font-bold">KSH {unit.amount.toLocaleString()}</span>
+                            <button className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                              Pay Now
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Payment Actions */}
+                  <div className="flex space-x-4">
+                    <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      Pay Semester Fee
+                    </button>
+                    <button className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                      Pay Hostel Fee
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Payment History */}
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <h3 className="text-lg font-semibold mb-4">Payment History</h3>
+                <div className="space-y-3">
+                  {financialStatus.paymentHistory.map(payment => (
+                    <div key={payment.id} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{payment.type}</p>
+                        <p className="text-sm text-gray-600">{payment.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">KSH {payment.amount.toLocaleString()}</p>
+                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                          {payment.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Summary Card */}
+            <div className="bg-white p-6 rounded-xl shadow-sm h-fit">
+              <h3 className="text-lg font-semibold mb-4">Payment Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-600">Semester Fee</span>
+                  <span className="font-medium">KSH {financialStatus.semesterFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-600">Hostel Fee</span>
+                  <span className="font-medium">KSH {financialStatus.hostelFee.amount.toLocaleString()}</span>
+                </div>
+                {financialStatus.retakesFee.pendingUnits.length > 0 && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Retake Fees</span>
+                    <span className="font-medium">
+                      KSH {(financialStatus.retakesFee.pendingUnits.reduce((acc, unit) => acc + unit.amount, 0)).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-2 font-bold text-lg">
+                  <span>Total Due</span>
+                  <span className="text-blue-600">
+                    KSH {(
+                      financialStatus.semesterFee +
+                      financialStatus.hostelFee.amount +
+                      financialStatus.retakesFee.pendingUnits.reduce((acc, unit) => acc + unit.amount, 0)
+                    ).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <button className="w-full mt-6 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                Pay All Fees
+              </button>
             </div>
           </div>
         );
@@ -723,6 +848,29 @@ const StudentDashboard = () => {
                       <span className="font-medium text-blue-900">{achievement.title}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Add this new section for semester activation status */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Current Semester Status</h3>
+                <div className="p-4 rounded-lg border-2 border-gray-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-gray-700 font-medium">{profileData.currentSemester.name}</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      profileData.currentSemester.status === 'activated' 
+                        ? 'bg-green-100 text-green-800'
+                        : profileData.currentSemester.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {profileData.currentSemester.status.charAt(0).toUpperCase() + profileData.currentSemester.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>Activation Date: {profileData.currentSemester.activationDate}</p>
+                    <p>Next Payment Due: {profileData.currentSemester.nextPaymentDue}</p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -9,6 +9,7 @@ import {
   CheckCircleIcon,
   Bars3Icon,
   XMarkIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 import DashboardHeader from '../../components/DashboardHeader';
 import {
@@ -26,21 +27,51 @@ const ParentDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [studentInfo] = useState({
     name: 'Alex Smith',
-    grade: '11th Grade',
+    program: 'Bachelor of Computer Science',
+    year: '2nd Year',
     attendance: 95,
     overallGrade: 'A-',
+    accommodation: 'On Campus',
+    semesterStatus: {
+      current: '3rd Year, 2nd Semester',
+      status: 'activated', // or 'pending' or 'inactive'
+      activationDate: '2024-01-15',
+      nextPaymentDue: '2024-04-01'
+    }
   });
 
   const [academicProgress] = useState([
-    { id: 1, subject: 'Advanced Mathematics', grade: 'A', attendance: '95%', teacher: 'Dr. Johnson' },
-    { id: 2, subject: 'Computer Science', grade: 'B+', attendance: '92%', teacher: 'Prof. Williams' },
-    { id: 3, subject: 'Physics', grade: 'A-', attendance: '98%', teacher: 'Dr. Brown' },
+    { id: 1, subject: 'Database Systems', grade: 'A', attendance: '95%', lecturer: 'Dr. Johnson' },
+    { id: 2, subject: 'Software Engineering', grade: 'B+', attendance: '92%', lecturer: 'Prof. Williams' },
+    { id: 3, subject: 'Data Structures', grade: 'A-', attendance: '98%', lecturer: 'Dr. Brown' },
   ]);
 
   const [financialOverview] = useState([
-    { id: 1, type: 'Tuition Fee', amount: 5000, status: 'Paid', dueDate: 'Paid on Mar 15' },
-    { id: 2, type: 'Library Fee', amount: 200, status: 'Pending', dueDate: 'Due Apr 1' },
-    { id: 3, type: 'Lab Fee', amount: 300, status: 'Pending', dueDate: 'Due Apr 15' },
+    { 
+      id: 1, 
+      type: 'Semester Fee', 
+      amount: 19000, 
+      status: 'Paid', 
+      dueDate: 'Paid on Mar 15',
+      mandatory: true
+    },
+    { 
+      id: 2, 
+      type: 'Hostel Fee (Optional)', 
+      amount: 12000, 
+      status: 'Pending', 
+      dueDate: 'Due Apr 1',
+      mandatory: false,
+      note: 'On-campus accommodation'
+    },
+    { 
+      id: 3, 
+      type: 'Retake Fee (2 units)', 
+      amount: 2000, 
+      status: 'Pending', 
+      dueDate: 'Due Apr 15',
+      mandatory: true
+    },
   ]);
 
   const [upcomingEvents] = useState([
@@ -185,7 +216,7 @@ const ParentDashboard = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-500">
-                        <span>Teacher: {subject.teacher}</span>
+                        <span>Lecturer: {subject.lecturer}</span>
                         <span>Attendance: {subject.attendance}</span>
                       </div>
                     </div>
@@ -199,7 +230,7 @@ const ParentDashboard = () => {
               <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
                 <h2 className="text-xl font-semibold mb-6 flex items-center">
                   <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-500" />
-                  Financial Overview
+                  Fee Statement
                 </h2>
                 <div className="space-y-4">
                   {financialOverview.map(item => (
@@ -208,11 +239,21 @@ const ParentDashboard = () => {
                                   transition-all duration-200 cursor-pointer">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium">{item.type}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">{item.type}</h3>
+                            {!item.mandatory && (
+                              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                Optional
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-500">{item.dueDate}</p>
+                          {item.note && (
+                            <p className="text-xs text-gray-500 mt-1">{item.note}</p>
+                          )}
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">${item.amount}</p>
+                          <p className="font-medium">KSh {item.amount.toLocaleString()}</p>
                           <span className={`text-sm ${
                             item.status === 'Paid' ? 'text-green-600' : 'text-yellow-600'
                           }`}>
@@ -245,6 +286,38 @@ const ParentDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Add this new section for semester status */}
+            <div className="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <AcademicCapIcon className="w-5 h-5 mr-2 text-blue-500" />
+                Current Semester Status
+              </h2>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+                <div className="space-y-2">
+                  <p className="text-lg font-medium text-gray-800">
+                    {studentInfo.semesterStatus.current}
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <span>Activated: {studentInfo.semesterStatus.activationDate}</span>
+                    <span>Next Payment: {studentInfo.semesterStatus.nextPaymentDue}</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    studentInfo.semesterStatus.status === 'activated'
+                      ? 'bg-green-100 text-green-800'
+                      : studentInfo.semesterStatus.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {studentInfo.semesterStatus.status === 'activated' ? '✓ Semester Activated' :
+                     studentInfo.semesterStatus.status === 'pending' ? '⏳ Activation Pending' :
+                     '❌ Not Activated'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         );
 
@@ -263,11 +336,21 @@ const ParentDashboard = () => {
                                 transition-all duration-200">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">{item.type}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium">{item.type}</h3>
+                          {!item.mandatory && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                              Optional
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">{item.dueDate}</p>
+                        {item.note && (
+                          <p className="text-xs text-gray-500 mt-1">{item.note}</p>
+                        )}
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">${item.amount}</p>
+                        <p className="font-medium">KSh {item.amount.toLocaleString()}</p>
                         <span className={`text-sm ${
                           item.status === 'Paid' ? 'text-green-600' : 'text-yellow-600'
                         }`}>
@@ -298,7 +381,7 @@ const ParentDashboard = () => {
                       <tr key={item.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 15, 2024</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.type}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.amount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">KSh {item.amount.toLocaleString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                             item.status === 'Paid' 
@@ -364,7 +447,7 @@ const ParentDashboard = () => {
                     <div className="flex justify-between items-center mb-2">
                       <div>
                         <h3 className="font-medium">{subject.subject}</h3>
-                        <p className="text-sm text-gray-500">Teacher: {subject.teacher}</p>
+                        <p className="text-sm text-gray-500">Lecturer: {subject.lecturer}</p>
                       </div>
                       <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                         Message
@@ -396,6 +479,46 @@ const ParentDashboard = () => {
         return null;
     }
   };
+
+  const renderStudentOverview = () => (
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="flex items-center">
+        <AcademicCapIcon className="w-12 h-12 text-blue-500" />
+        <div className="ml-4">
+          <h3 className="text-sm font-medium text-gray-500">Student Name</h3>
+          <p className="text-lg font-semibold text-gray-800">{studentInfo.name}</p>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <ChartBarIcon className="w-12 h-12 text-green-500" />
+        <div className="ml-4">
+          <h3 className="text-sm font-medium text-gray-500">Program</h3>
+          <p className="text-lg font-semibold text-gray-800">{studentInfo.program}</p>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <ClockIcon className="w-12 h-12 text-purple-500" />
+        <div className="ml-4">
+          <h3 className="text-sm font-medium text-gray-500">Attendance</h3>
+          <p className="text-lg font-semibold text-gray-800">{studentInfo.attendance}%</p>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <CheckCircleIcon className="w-12 h-12 text-yellow-500" />
+        <div className="ml-4">
+          <h3 className="text-sm font-medium text-gray-500">Overall Grade</h3>
+          <p className="text-lg font-semibold text-gray-800">{studentInfo.overallGrade}</p>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <HomeIcon className="w-12 h-12 text-indigo-500" />
+        <div className="ml-4">
+          <h3 className="text-sm font-medium text-gray-500">Accommodation</h3>
+          <p className="text-lg font-semibold text-gray-800">{studentInfo.accommodation}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -469,42 +592,13 @@ const ParentDashboard = () => {
           <div className="mb-8">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl shadow-lg">
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back, Mr. Smith! 👋</h1>
-              <p className="text-blue-100">Here's an overview of {studentInfo.name}'s academic progress.</p>
+              <p className="text-blue-100">Here's an overview of {studentInfo.name}'s academic progress in {studentInfo.program}.</p>
             </div>
           </div>
 
           {/* Student Overview Card */}
           <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="flex items-center">
-                <AcademicCapIcon className="w-12 h-12 text-blue-500" />
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Student Name</h3>
-                  <p className="text-lg font-semibold text-gray-800">{studentInfo.name}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <ChartBarIcon className="w-12 h-12 text-green-500" />
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Grade Level</h3>
-                  <p className="text-lg font-semibold text-gray-800">{studentInfo.grade}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <ClockIcon className="w-12 h-12 text-purple-500" />
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Attendance</h3>
-                  <p className="text-lg font-semibold text-gray-800">{studentInfo.attendance}%</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <CheckCircleIcon className="w-12 h-12 text-yellow-500" />
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Overall Grade</h3>
-                  <p className="text-lg font-semibold text-gray-800">{studentInfo.overallGrade}</p>
-                </div>
-              </div>
-            </div>
+            {renderStudentOverview()}
           </div>
 
           {/* Render content based on active tab */}
