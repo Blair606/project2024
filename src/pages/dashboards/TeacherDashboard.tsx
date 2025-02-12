@@ -11,6 +11,8 @@ import {
   EnvelopeIcon,
   Bars3Icon,
   XMarkIcon,
+  VideoCameraIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
 import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
@@ -60,6 +62,17 @@ interface NotificationFormData {
   message: string;
   classId: number;
   emailNotification: boolean;
+}
+
+interface ScheduledClass {
+  id: number;
+  title: string;
+  course: string;
+  date: string;
+  time: string;
+  status: 'upcoming' | 'live' | 'completed';
+  meetingLink?: string;
+  recording?: string;
 }
 
 const TeacherDashboard = () => {
@@ -156,10 +169,25 @@ const TeacherDashboard = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [scheduledClasses, setScheduledClasses] = useState<ScheduledClass[]>([
+    {
+      id: 1,
+      title: 'Introduction to Machine Learning',
+      course: 'Advanced Mathematics',
+      date: '2024-03-20',
+      time: '10:00 AM - 11:30 AM',
+      status: 'upcoming',
+    },
+    // Add more sample classes...
+  ]);
+
+  const [isScheduleClassModalOpen, setIsScheduleClassModalOpen] = useState(false);
+
   const navItems = [
     { id: 'overview', icon: BookOpenIcon, label: 'Overview' },
     { id: 'discussions', icon: ChatBubbleLeftRightIcon, label: 'Discussions' },
     { id: 'assignments', icon: DocumentCheckIcon, label: 'Assignments' },
+    { id: 'online-classes', icon: VideoCameraIcon, label: 'Online Classes' },
     { id: 'students', icon: UsersIcon, label: 'Students' },
     { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
   ];
@@ -389,6 +417,77 @@ const TeacherDashboard = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        );
+
+      case 'online-classes':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Online Classes</h2>
+              <button
+                onClick={() => setIsScheduleClassModalOpen(true)}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Schedule Class
+              </button>
+            </div>
+
+            {/* Scheduled Classes List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {scheduledClasses.map((class_) => (
+                <div key={class_.id} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-semibold text-lg">{class_.title}</h3>
+                      <p className="text-gray-600">{class_.course}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      class_.status === 'upcoming' 
+                        ? 'bg-blue-100 text-blue-800'
+                        : class_.status === 'live'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {class_.status.charAt(0).toUpperCase() + class_.status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      <span>{class_.date}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <ClockIcon className="w-4 h-4 mr-2" />
+                      <span>{class_.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex space-x-2">
+                    {class_.status === 'upcoming' ? (
+                      <>
+                        <button className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                          Start Class
+                        </button>
+                        <button className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100">
+                          Cancel
+                        </button>
+                      </>
+                    ) : class_.status === 'live' ? (
+                      <button className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+                        Join Class
+                      </button>
+                    ) : (
+                      <button className="w-full px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                        View Recording
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
@@ -867,6 +966,21 @@ const TeacherDashboard = () => {
         onSubmit={handleSendNotification}
         classes={classes}
       />
+
+      <ScheduleClassModal
+        isOpen={isScheduleClassModalOpen}
+        onClose={() => setIsScheduleClassModalOpen(false)}
+        courses={courses}
+        onSubmit={(data) => {
+          const newClass: ScheduledClass = {
+            id: scheduledClasses.length + 1,
+            ...data,
+            status: 'upcoming',
+          };
+          setScheduledClasses([...scheduledClasses, newClass]);
+          setIsScheduleClassModalOpen(false);
+        }}
+      />
     </div>
   );
 };
@@ -963,6 +1077,113 @@ const NotificationModal = ({
             </div>
           </form>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const ScheduleClassModal = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit,
+  courses 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onSubmit: (data: Omit<ScheduledClass, 'id' | 'status'>) => void;
+  courses: { id: number; name: string; }[];
+}) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    course: '',
+    date: '',
+    time: '',
+    meetingLink: '',
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Schedule Online Class</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit(formData);
+          setFormData({ title: '', course: '', date: '', time: '', meetingLink: '' });
+        }}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                type="text"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Course</label>
+              <select
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.course}
+                onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+                required
+              >
+                <option value="">Select Course</option>
+                {courses.map(course => (
+                  <option key={course.id} value={course.name}>{course.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date</label>
+              <input
+                type="date"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Time</label>
+              <input
+                type="time"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Meeting Link (Optional)</label>
+              <input
+                type="url"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formData.meetingLink}
+                onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
+                placeholder="https://meet.google.com/..."
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Schedule
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

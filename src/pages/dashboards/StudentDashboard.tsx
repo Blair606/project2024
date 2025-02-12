@@ -15,6 +15,7 @@ import {
   DocumentPlusIcon,
   Bars3Icon,
   XMarkIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 import DashboardHeader from '../../components/DashboardHeader';
 
@@ -267,7 +268,20 @@ const StudentDashboard = () => {
     { id: 'academic', icon: ChartBarIcon, label: 'Academic Progress' },
     { id: 'financial', icon: BanknotesIcon, label: 'Financial Status' },
     { id: 'resources', icon: BookmarkIcon, label: 'Resources' },
+    { id: 'online-classes', icon: VideoCameraIcon, label: 'Online Classes' },
   ];
+
+  const [scheduledClasses] = useState([
+    {
+      id: 1,
+      title: 'Introduction to Machine Learning',
+      course: 'CS 301',
+      date: '2024-03-20',
+      time: '10:00 AM - 11:30 AM',
+      status: 'upcoming'
+    }
+    // Add more sample classes as needed
+  ]);
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -890,6 +904,63 @@ const StudentDashboard = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        );
+
+      case 'online-classes':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-6">Online Classes</h2>
+            
+            {/* Upcoming Classes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {scheduledClasses.map((class_) => (
+                <div key={class_.id} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-semibold text-lg">{class_.title}</h3>
+                      <p className="text-gray-600">{class_.course}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      class_.status === 'upcoming' 
+                        ? 'bg-blue-100 text-blue-800'
+                        : class_.status === 'live'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {class_.status.charAt(0).toUpperCase() + class_.status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      <span>{class_.date}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <ClockIcon className="w-4 h-4 mr-2" />
+                      <span>{class_.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    {class_.status === 'live' ? (
+                      <button className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+                        Join Class
+                      </button>
+                    ) : class_.status === 'upcoming' ? (
+                      <button className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Set Reminder
+                      </button>
+                    ) : (
+                      <button className="w-full px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                        View Recording
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
