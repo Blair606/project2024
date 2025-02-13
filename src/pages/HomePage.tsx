@@ -1,3 +1,5 @@
+import { useDispatch } from 'react-redux';
+import { setUser } from '../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import {
   UserGroupIcon,
@@ -9,8 +11,21 @@ import {
 import { useState } from 'react';
 
 const HomePage = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLogin = (role: 'teacher' | 'student' | 'admin') => {
+    dispatch(setUser({
+      id: '1',
+      name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+      email: `test${role}@example.com`,
+      role,
+      isAdmin: role === 'teacher'
+    }));
+
+    navigate(role === 'admin' ? '/admin' : `/dashboard/${role}`);
+  };
 
   const roles = [
     {
@@ -46,7 +61,7 @@ const HomePage = () => {
               <img src="/logo.png" alt="EduPortal" className="h-8 w-auto" />
               <span className="text-xl font-bold text-gray-900">Edu Portal</span>
             </div>
-            
+
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
@@ -112,7 +127,7 @@ const HomePage = () => {
                 </div>
                 <div className="p-4 md:p-6">
                   <button
-                    onClick={() => navigate(role.path)}
+                    onClick={() => handleLogin(role.path.split('/')[2] as 'teacher' | 'student' | 'admin')}
                     className="w-full bg-gray-900 text-white py-2 md:py-3 px-4 md:px-6 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     Access Portal

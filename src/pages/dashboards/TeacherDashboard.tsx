@@ -13,6 +13,7 @@ import {
   XMarkIcon,
   VideoCameraIcon,
   ClockIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
 import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
@@ -21,6 +22,9 @@ import { Assignment } from '../../store/slices/assignmentSlice';
 import {
   LineChart, Line, PieChart, Pie, Cell,
 } from 'recharts';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { useNavigate } from 'react-router-dom';
 
 interface ClassData {
   id: number;
@@ -76,6 +80,8 @@ interface ScheduledClass {
 }
 
 const TeacherDashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState('overview');
   const [courses] = useState([
     { id: 1, name: 'Advanced Mathematics', students: 30, nextClass: '2:30 PM Today', progress: 75 },
@@ -981,6 +987,19 @@ const TeacherDashboard = () => {
           setIsScheduleClassModalOpen(false);
         }}
       />
+
+      {/* Add Admin Access Button if user has admin privileges */}
+      {user?.isAdmin && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg"
+          >
+            <Cog6ToothIcon className="w-5 h-5 mr-2" />
+            Access Admin Dashboard
+          </button>
+        </div>
+      )}
     </div>
   );
 };
