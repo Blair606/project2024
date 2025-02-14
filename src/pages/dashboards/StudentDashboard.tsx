@@ -17,11 +17,29 @@ import {
   XMarkIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
-import DashboardHeader from '../../components/DashboardHeader';
+
+interface DiscussionTopic {
+  id: number;
+  title: string;
+  lastMessage: string;
+  replies: number;
+  unread: number;
+  timestamp: string;
+}
+
+interface DiscussionGroup {
+  id: number;
+  name: string;
+  course: string;
+  courseCode: string;
+  members: number;
+  lastActive: string;
+  topics: DiscussionTopic[];
+}
 
 const StudentDashboard = () => {
   const [activeMenu, setActiveMenu] = useState('courses');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [currentUnits] = useState([
     {
@@ -282,6 +300,75 @@ const StudentDashboard = () => {
     }
     // Add more sample classes as needed
   ]);
+
+  // Add new state for discussions
+  const [discussionGroups] = useState<DiscussionGroup[]>([
+    {
+      id: 1,
+      name: 'ML Study Group',
+      course: 'Machine Learning',
+      courseCode: 'CS 301',
+      members: 15,
+      lastActive: '2 hours ago',
+      topics: [
+        { 
+          id: 1, 
+          title: 'Neural Networks Q&A',
+          lastMessage: 'Can someone explain backpropagation?',
+          replies: 8,
+          unread: 2,
+          timestamp: '1 hour ago'
+        },
+        { 
+          id: 2, 
+          title: 'Project Collaboration',
+          lastMessage: 'Looking for team members for the ML project',
+          replies: 12,
+          unread: 0,
+          timestamp: '3 hours ago'
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Network Security Discussion',
+      course: 'Network Security',
+      courseCode: 'CS 302',
+      members: 12,
+      lastActive: '30 minutes ago',
+      topics: [
+        {
+          id: 1,
+          title: 'Encryption Techniques',
+          lastMessage: 'Discussion about RSA implementation',
+          replies: 15,
+          unread: 3,
+          timestamp: '30 minutes ago'
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: 'Neural Networks Lab Group',
+      course: 'Neural Networks',
+      courseCode: 'CS 303',
+      members: 10,
+      lastActive: '1 day ago',
+      topics: [
+        {
+          id: 1,
+          title: 'CNN Architecture Help',
+          lastMessage: 'Questions about convolutional layers',
+          replies: 5,
+          unread: 1,
+          timestamp: '1 day ago'
+        }
+      ]
+    }
+  ]);
+
+  const [selectedGroup, setSelectedGroup] = useState<DiscussionGroup | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<DiscussionTopic | null>(null);
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -965,6 +1052,170 @@ const StudentDashboard = () => {
           </div>
         );
 
+      case 'discussions':
+        return (
+          <div className="space-y-6">
+            {!selectedGroup ? (
+              // Discussion Groups List
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-semibold">Discussion Groups</h2>
+                  <div className="flex space-x-2">
+                    <button className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200">
+                      My Groups
+                    </button>
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                      All Groups
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {discussionGroups.map((group) => (
+                    <div 
+                      key={group.id} 
+                      className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedGroup(group)}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg">{group.name}</h3>
+                          <p className="text-sm text-gray-500">{group.course}</p>
+                        </div>
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                          {group.courseCode}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex justify-between">
+                          <span>Members:</span>
+                          <span className="font-medium">{group.members}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Topics:</span>
+                          <span className="font-medium">{group.topics.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Last Active:</span>
+                          <span className="font-medium">{group.lastActive}</span>
+                        </div>
+                      </div>
+
+                      {group.topics.some(topic => topic.unread > 0) && (
+                        <div className="mt-4 flex justify-end">
+                          <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
+                            {group.topics.reduce((acc, topic) => acc + topic.unread, 0)} new messages
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : !selectedTopic ? (
+              // Topics List for Selected Group
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <button 
+                      onClick={() => setSelectedGroup(null)}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <div>
+                      <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
+                      <p className="text-gray-600">{selectedGroup.course} • {selectedGroup.members} members</p>
+                    </div>
+                  </div>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    New Topic
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm divide-y">
+                  {selectedGroup.topics.map((topic) => (
+                    <div 
+                      key={topic.id}
+                      className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => setSelectedTopic(topic)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-lg">{topic.title}</h3>
+                          <p className="text-gray-600 mt-1">{topic.lastMessage}</p>
+                          <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                            <span>{topic.replies} replies</span>
+                            <span>•</span>
+                            <span>{topic.timestamp}</span>
+                          </div>
+                        </div>
+                        {topic.unread > 0 && (
+                          <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-sm">
+                            {topic.unread} new
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Individual Topic View
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <button 
+                    onClick={() => setSelectedTopic(null)}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <h2 className="text-2xl font-semibold">{selectedTopic.title}</h2>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="space-y-6">
+                    {/* Sample messages - in a real app, these would come from your backend */}
+                    <div className="flex space-x-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-blue-600 font-medium">JD</span>
+                        </div>
+                      </div>
+                      <div className="flex-grow">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">John Doe</span>
+                          <span className="text-gray-500 text-sm">2 hours ago</span>
+                        </div>
+                        <p className="mt-1 text-gray-800">{selectedTopic.lastMessage}</p>
+                      </div>
+                    </div>
+
+                    {/* Reply box */}
+                    <div className="mt-6 border-t pt-6">
+                      <textarea
+                        rows={4}
+                        className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Write your reply..."
+                      />
+                      <div className="mt-4 flex justify-end">
+                        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                          Post Reply
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return (
           <div className="text-center p-6">
@@ -976,28 +1227,56 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader userRole="Student" userName={profileData.name} />
-      
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-lg bg-white shadow-lg text-gray-700 hover:bg-gray-50"
-        >
-          {isMobileMenuOpen ? (
-            <XMarkIcon className="w-6 h-6" />
-          ) : (
-            <Bars3Icon className="w-6 h-6" />
-          )}
-        </button>
-      </div>
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-40">
+        <div className="flex items-center justify-between px-4 h-16">
+          {/* Left side - Menu button and logo */}
+          <div className="flex items-center lg:w-64">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
+            <div className="lg:hidden ml-2">
+              <AcademicCapIcon className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
 
-      {/* Sidebar - Desktop & Mobile */}
-      <div className={`
-        fixed w-64 h-full bg-white shadow-lg transition-transform duration-300 z-40
-        lg:translate-x-0 
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+          {/* Right side - Actions and profile */}
+          <div className="flex items-center justify-end flex-1 space-x-4">
+            <div className="hidden sm:flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Spring 2024</span>
+              <span className="text-gray-300">|</span>
+            </div>
+            <div className="flex items-center border-l pl-4 ml-4">
+              <div className="hidden sm:block text-right mr-3">
+                <p className="text-sm font-medium text-gray-900">{profileData.name}</p>
+                <p className="text-xs text-gray-500">Student</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-sm font-medium text-blue-600">
+                  {profileData.name.split(' ').map(n => n[0]).join('')}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Responsive Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          className="lg:hidden absolute right-4 top-4 p-2 rounded-md text-gray-600 hover:bg-gray-100"
+        >
+          <XMarkIcon className="h-6 w-6" />
+        </button>
+
         <div className="p-6">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
@@ -1005,7 +1284,7 @@ const StudentDashboard = () => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">Student Portal</h2>
-              <p className="text-sm text-gray-500">{profileData.year}</p>
+              <p className="text-sm text-gray-500">Spring 2024</p>
             </div>
           </div>
           <div className="h-0.5 bg-gray-100 w-full mb-6"></div>
@@ -1017,7 +1296,7 @@ const StudentDashboard = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveMenu(item.id);
-                  setIsMobileMenuOpen(false); // Close mobile menu when item is selected
+                  setIsSidebarOpen(false);
                 }}
                 className={`flex items-center p-3 rounded-xl transition-all duration-200
                   ${activeMenu === item.id 
@@ -1031,38 +1310,29 @@ const StudentDashboard = () => {
             ))}
           </nav>
         </div>
-      </div>
+      </aside>
 
-      {/* Overlay for mobile menu */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Main Content - Adaptive padding */}
-      <div className={`
-        pt-20 p-4 sm:p-6 lg:p-8
-        lg:ml-64 transition-all duration-300
-        ${isMobileMenuOpen ? 'ml-64' : 'ml-0'}
-      `}>
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-lg">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              Welcome back, {profileData.name.split(' ')[0]}!
-            </h1>
-            <p className="text-blue-100 text-sm sm:text-base">
-              Your learning journey continues. Keep up the excellent work in {profileData.course}!
-            </p>
+      {/* Main Content */}
+      <main className={`transition-all duration-300 pt-16 min-h-screen ${
+        isSidebarOpen ? 'lg:ml-64' : 'lg:ml-64'
+      }`}>
+        <div className="p-4 sm:p-6 lg:p-8">
+          {/* Welcome Banner */}
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl shadow-lg">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                Welcome back, {profileData.name.split(' ')[0]}! 👋
+              </h1>
+              <p className="text-blue-100">
+                Your learning journey continues. Keep up the excellent work in {profileData.course}!
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Update grid layouts in renderContent */}
-        <div className="w-full">
+          {/* Render content based on active menu */}
           {renderContent()}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

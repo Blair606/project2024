@@ -1,8 +1,8 @@
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 1rem;
+  text-align: left;
 }
 
 .logo {
@@ -39,4 +39,92 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Dashboard Layout Styles */
+.dashboard-container {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.dashboard-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #root {
+    padding: 0.5rem;
+  }
+  
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-sidebar {
+    position: fixed;
+    width: 100%;
+    height: auto;
+    z-index: 50;
+    background: white;
+  }
+}
+
+/* Utility classes */
+.overflow-auto {
+  overflow: auto;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
 }
