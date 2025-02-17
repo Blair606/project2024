@@ -8,6 +8,8 @@ import AdminDashboard from './pages/dashboards/AdminDashboard'
 import { Provider } from 'react-redux'
 import { store } from './store/store'
 import ProtectedRoute from './components/ProtectedRoute'
+import Login from './pages/Login'
+import SignUpPage from './pages/SignUpPage'
 
 function App() {
   return (
@@ -47,6 +49,8 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path='/signin' element={<Login /> } />
+          <Route path='/signup' element={<SignUpPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

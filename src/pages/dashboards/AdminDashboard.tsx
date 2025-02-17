@@ -1270,7 +1270,7 @@ const AdminDashboard = () => {
                   </svg>
                   Export to CSV
                 </CSVLink>
-              </div>
+                      </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Date Range Filter */}
@@ -1295,7 +1295,7 @@ const AdminDashboard = () => {
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
                       placeholderText="End Date"
                     />
-                  </div>
+                    </div>
                 </div>
 
                 {/* Transaction Type Filter */}
@@ -1315,7 +1315,7 @@ const AdminDashboard = () => {
                     <option value="hostel">Hostel</option>
                     <option value="other">Other</option>
                   </select>
-                </div>
+                  </div>
 
                 {/* Payment Status Filter */}
                 <div className="space-y-2">
@@ -1333,7 +1333,7 @@ const AdminDashboard = () => {
                     <option value="pending">Pending</option>
                     <option value="overdue">Overdue</option>
                   </select>
-                </div>
+                  </div>
 
                 {/* Amount Range Filter */}
                 <div className="space-y-2">
@@ -1359,9 +1359,9 @@ const AdminDashboard = () => {
                       placeholder="Max"
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
                     />
-                  </div>
                 </div>
               </div>
+            </div>
 
               {/* Search and Sort */}
               <div className="mt-4 flex flex-col sm:flex-row gap-4">
@@ -1376,7 +1376,7 @@ const AdminDashboard = () => {
                     placeholder="Search by student name or ID..."
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
-                </div>
+              </div>
                 <div className="flex space-x-2">
                   <select
                     value={financeFilters.sortBy}
@@ -1597,7 +1597,7 @@ const AdminDashboard = () => {
                           : 'translate-x-1'
                       } inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1`}
                     />
-                  </button>
+              </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -1625,7 +1625,7 @@ const AdminDashboard = () => {
                           : 'translate-x-1'
                       } inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1`}
                     />
-                  </button>
+              </button>
                 </div>
               </div>
             </div>
@@ -1703,7 +1703,7 @@ const AdminDashboard = () => {
                           : 'translate-x-1'
                       } inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1`}
                     />
-                  </button>
+              </button>
                 </div>
               </div>
             </div>
