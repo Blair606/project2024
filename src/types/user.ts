@@ -1,6 +1,6 @@
 export interface BaseUser {
   id: string;
-  name: string;
+  firstName: string;
   email: string;
   status: 'active' | 'inactive';
   joinDate: string;

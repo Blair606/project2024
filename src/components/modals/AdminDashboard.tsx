@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import {
   UsersIcon,
@@ -22,6 +22,7 @@ import DashboardHeader from '../../components/DashboardHeader';
 import UserModal from '../../components/modals/UserModal';
 import CourseModal from '../../components/modals/CourseModal';
 import DepartmentModal from '../../components/modals/DepartmentModal';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -94,19 +95,26 @@ const AdminDashboard = () => {
     // Add more departments...
   ]);
 
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      name: 'Dr. Sarah Chen',
-      email: 'sarah.chen@university.edu',
-      role: 'teacher',
-      status: 'active',
-      department: 'Computer Science',
-      joinDate: '2023-01-15'
-    },
-    // Add more users...
-  ]);
+  const [users, setUsers] = useState<User[]>([]); // Initialize as an empty array
 
+    const fetchUsers = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/users/users');
+            setUsers(response.data); // Assuming the response data is an array of users
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            alert('Failed to fetch users. Please try again later.');
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+
+
+    
+  
   const [courses, setCourses] = useState<Course[]>([
     {
       id: '1',
