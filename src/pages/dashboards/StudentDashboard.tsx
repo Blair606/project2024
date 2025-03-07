@@ -17,6 +17,7 @@ import {
   XMarkIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
 
 interface DiscussionTopic {
   id: number;
@@ -37,11 +38,41 @@ interface DiscussionGroup {
   topics: DiscussionTopic[];
 }
 
+interface Topic {
+  id: number;
+  title: string;
+  content: string;
+  completed: boolean;
+  questions: {
+    id: number;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    attempted: boolean;
+    correct?: boolean;
+  }[];
+  lastVisited?: string;
+}
+
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  instructor: string;
+  progress: number;
+  nextClass: string;
+  resources: { id: number; title: string; type: string; downloadUrl: string; }[];
+  assignments: { id: number; title: string; dueDate: string; status: string; }[];
+  topics: Topic[];
+  lastVisited?: string;
+}
+
 const StudentDashboard = () => {
   const [activeMenu, setActiveMenu] = useState('courses');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const [currentUnits] = useState([
+  const [currentUnits, setCurrentUnits] = useState<Unit[]>([
     {
       id: 1,
       code: 'CS 301',
@@ -49,6 +80,7 @@ const StudentDashboard = () => {
       instructor: 'Dr. Sarah Chen',
       progress: 65,
       nextClass: '2:30 PM Today',
+      lastVisited: '2024-03-19T14:30:00',
       resources: [
         { id: 1, title: 'Introduction to ML Algorithms', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'Python ML Libraries', type: 'doc', downloadUrl: '#' },
@@ -56,6 +88,49 @@ const StudentDashboard = () => {
       assignments: [
         { id: 1, title: 'ML Model Implementation', dueDate: '2024-03-20', status: 'pending' },
         { id: 2, title: 'Dataset Analysis', dueDate: '2024-03-22', status: 'completed' },
+      ],
+      topics: [
+        {
+          id: 1,
+          title: 'Introduction to Machine Learning',
+          content: 'Machine learning is a subset of artificial intelligence...',
+          completed: true,
+          questions: [
+            {
+              id: 1,
+              question: 'What is Machine Learning?',
+              options: [
+                'A type of computer hardware',
+                'The ability of systems to learn from data',
+                'A programming language',
+                'A database system'
+              ],
+              correctAnswer: 'The ability of systems to learn from data',
+              attempted: true,
+              correct: true
+            }
+          ]
+        },
+        {
+          id: 2,
+          title: 'Supervised Learning',
+          content: 'Supervised learning is where the model learns from labeled data...',
+          completed: false,
+          questions: [
+            {
+              id: 1,
+              question: 'What characterizes supervised learning?',
+              options: [
+                'Learning without labels',
+                'Learning from labeled data',
+                'Learning without data',
+                'Learning from unlabeled data'
+              ],
+              correctAnswer: 'Learning from labeled data',
+              attempted: false
+            }
+          ]
+        }
       ]
     },
     {
@@ -65,6 +140,7 @@ const StudentDashboard = () => {
       instructor: 'Prof. James Wilson',
       progress: 70,
       nextClass: '10:00 AM Tomorrow',
+      lastVisited: '2024-03-18T15:45:00',
       resources: [
         { id: 1, title: 'Cryptography Basics', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'Security Protocols', type: 'pdf', downloadUrl: '#' },
@@ -72,6 +148,29 @@ const StudentDashboard = () => {
       assignments: [
         { id: 1, title: 'Security Audit Report', dueDate: '2024-03-22', status: 'pending' },
         { id: 2, title: 'Encryption Implementation', dueDate: '2024-03-25', status: 'pending' },
+      ],
+      topics: [
+        {
+          id: 1,
+          title: 'Introduction to Network Security',
+          content: 'Network security fundamentals and basic concepts...',
+          completed: true,
+          questions: [
+            {
+              id: 1,
+              question: 'What is the primary goal of network security?',
+              options: [
+                'Increase network speed',
+                'Protect data and resources',
+                'Reduce network costs',
+                'Improve user interface'
+              ],
+              correctAnswer: 'Protect data and resources',
+              attempted: true,
+              correct: true
+            }
+          ]
+        }
       ]
     },
     {
@@ -81,12 +180,56 @@ const StudentDashboard = () => {
       instructor: 'Dr. Michael Chang',
       progress: 60,
       nextClass: '11:30 AM Today',
+      lastVisited: '2024-03-17T11:30:00',
       resources: [
         { id: 1, title: 'Neural Network Architectures', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'Deep Learning Frameworks', type: 'doc', downloadUrl: '#' },
       ],
       assignments: [
         { id: 1, title: 'CNN Implementation', dueDate: '2024-03-24', status: 'pending' },
+      ],
+      topics: [
+        {
+          id: 1,
+          title: 'Neural Network Fundamentals',
+          content: 'Introduction to artificial neural networks and their components...',
+          completed: true,
+          questions: [
+            {
+              id: 1,
+              question: 'What is a neuron in neural networks?',
+              options: [
+                'A biological cell',
+                'A mathematical function that processes inputs',
+                'A computer processor',
+                'A type of database'
+              ],
+              correctAnswer: 'A mathematical function that processes inputs',
+              attempted: true,
+              correct: true
+            }
+          ]
+        },
+        {
+          id: 2,
+          title: 'Activation Functions',
+          content: 'Understanding different types of activation functions...',
+          completed: false,
+          questions: [
+            {
+              id: 1,
+              question: 'Which activation function outputs values between 0 and 1?',
+              options: [
+                'ReLU',
+                'Sigmoid',
+                'Tanh',
+                'Linear'
+              ],
+              correctAnswer: 'Sigmoid',
+              attempted: false
+            }
+          ]
+        }
       ]
     },
     {
@@ -96,12 +239,36 @@ const StudentDashboard = () => {
       instructor: 'Dr. Emily Brooks',
       progress: 75,
       nextClass: '2:00 PM Tomorrow',
+      lastVisited: '2024-03-19T09:15:00',
       resources: [
         { id: 1, title: 'IS Strategy Framework', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'Case Studies', type: 'pdf', downloadUrl: '#' },
       ],
       assignments: [
         { id: 1, title: 'Business Strategy Analysis', dueDate: '2024-03-23', status: 'pending' },
+      ],
+      topics: [
+        {
+          id: 1,
+          title: 'Strategic Alignment',
+          content: 'Understanding how IT strategy aligns with business strategy...',
+          completed: true,
+          questions: [
+            {
+              id: 1,
+              question: 'What is strategic alignment?',
+              options: [
+                'Hardware configuration',
+                'Matching IT with business goals',
+                'Network setup',
+                'Database design'
+              ],
+              correctAnswer: 'Matching IT with business goals',
+              attempted: true,
+              correct: true
+            }
+          ]
+        }
       ]
     },
     {
@@ -111,12 +278,36 @@ const StudentDashboard = () => {
       instructor: 'Prof. Lisa Martinez',
       progress: 68,
       nextClass: '9:00 AM Tomorrow',
+      lastVisited: '2024-03-18T14:20:00',
       resources: [
         { id: 1, title: 'Mobile App Development', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'UI/UX Guidelines', type: 'pdf', downloadUrl: '#' },
       ],
       assignments: [
         { id: 1, title: 'Mobile App Project', dueDate: '2024-03-26', status: 'pending' },
+      ],
+      topics: [
+        {
+          id: 1,
+          title: 'Mobile App Architecture',
+          content: 'Understanding mobile application architectures and patterns...',
+          completed: true,
+          questions: [
+            {
+              id: 1,
+              question: 'What is a key consideration in mobile app architecture?',
+              options: [
+                'Desktop screen size',
+                'Battery consumption',
+                'Server room temperature',
+                'Network cable length'
+              ],
+              correctAnswer: 'Battery consumption',
+              attempted: true,
+              correct: true
+            }
+          ]
+        }
       ]
     },
     {
@@ -126,12 +317,36 @@ const StudentDashboard = () => {
       instructor: 'Dr. Robert Kim',
       progress: 72,
       nextClass: '4:00 PM Today',
+      lastVisited: '2024-03-19T10:45:00',
       resources: [
         { id: 1, title: 'Multimedia Processing', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'Compression Techniques', type: 'doc', downloadUrl: '#' },
       ],
       assignments: [
         { id: 1, title: 'Media Processing Project', dueDate: '2024-03-25', status: 'pending' },
+      ],
+      topics: [
+        {
+          id: 1,
+          title: 'Digital Media Fundamentals',
+          content: 'Introduction to digital media types and processing...',
+          completed: true,
+          questions: [
+            {
+              id: 1,
+              question: 'What is the primary purpose of media compression?',
+              options: [
+                'Increase file size',
+                'Reduce storage and bandwidth requirements',
+                'Change file format',
+                'Improve screen resolution'
+              ],
+              correctAnswer: 'Reduce storage and bandwidth requirements',
+              attempted: true,
+              correct: true
+            }
+          ]
+        }
       ]
     }
   ]);
@@ -370,6 +585,33 @@ const StudentDashboard = () => {
   const [selectedGroup, setSelectedGroup] = useState<DiscussionGroup | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<DiscussionTopic | null>(null);
 
+  // Add this function to handle unit selection
+  const handleUnitClick = (unitId: number) => {
+    const unit = currentUnits.find(u => u.id === unitId);
+    if (unit) {
+      // Find the first incomplete topic or the last visited topic
+      const currentTopic = unit.topics.find(t => !t.completed) || unit.topics[unit.topics.length - 1];
+      navigate(`/unit/${unitId}/topic/${currentTopic.id}`);
+    }
+  };
+
+  const updateStudentProgress = (unitId: number) => {
+    setCurrentUnits(units.map(unit => {
+      if (unit.id === unitId) {
+        const totalTopics = unit.topics.length;
+        const completedTopics = unit.topics.filter(topic => 
+          topic.completed || topic.attempted
+        ).length;
+        
+        return {
+          ...unit,
+          progress: totalTopics ? Math.round((completedTopics / totalTopics) * 100) : 0
+        };
+      }
+      return unit;
+    }));
+  };
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'courses':
@@ -398,77 +640,110 @@ const StudentDashboard = () => {
                   Current Units
                 </h2>
                 <div className="space-y-6">
-                  {currentUnits.map(course => (
-                    <div key={course.id} className="border rounded-xl p-4 hover:shadow-md transition-all duration-200">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="font-semibold text-lg text-gray-800">{course.name}</h3>
-                          <p className="text-gray-600">Instructor: {course.instructor}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <ClockIcon className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full">
-                            {course.nextClass}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="mt-2 bg-gray-200 rounded-full h-2.5">
-                        <div
-                          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                          style={{ width: `${course.progress}%` }}
-                        />
-                      </div>
-                      <div className="mt-2 flex justify-between items-center mb-4">
-                        <span className="text-sm text-gray-500">Progress</span>
-                        <span className="text-sm font-medium text-blue-600">{course.progress}% Complete</span>
-                      </div>
-
-                      {/* Resources and Assignments Tabs */}
-                      <div className="mt-4 border-t pt-4">
-                        <div className="grid grid-cols-2 gap-4">
+                  {currentUnits
+                    .sort((a, b) => {
+                      const dateA = new Date(a.lastVisited || '');
+                      const dateB = new Date(b.lastVisited || '');
+                      return dateB.getTime() - dateA.getTime();
+                    })
+                    .map(course => (
+                      <div
+                        key={course.id}
+                        className="border rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+                        onClick={() => handleUnitClick(course.id)}
+                      >
+                        <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h4 className="font-medium text-gray-700 mb-2">Recent Resources</h4>
-                            <div className="space-y-2">
-                              {course.resources.slice(0, 2).map(resource => (
-                                <a
-                                  key={resource.id}
-                                  href={resource.downloadUrl}
-                                  className="flex items-center p-2 hover:bg-gray-50 rounded-lg group"
-                                >
-                                  <DocumentIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 mr-2" />
-                                  <span className="text-sm text-gray-600 group-hover:text-blue-600">
-                                    {resource.title}
-                                  </span>
-                                </a>
-                              ))}
-                            </div>
+                            <h3 className="font-semibold text-lg text-gray-800">{course.name}</h3>
+                            <p className="text-gray-600">Instructor: {course.instructor}</p>
+                            {course.lastVisited && (
+                              <p className="text-sm text-gray-500">
+                                Last visited: {new Date(course.lastVisited).toLocaleString()}
+                              </p>
+                            )}
                           </div>
-                          <div>
-                            <h4 className="font-medium text-gray-700 mb-2">Upcoming Tasks</h4>
-                            <div className="space-y-2">
-                              {course.assignments.map(assignment => (
-                                <div
-                                  key={assignment.id}
-                                  className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg"
-                                >
-                                  <span className="text-sm text-gray-600">{assignment.title}</span>
-                                  <span className={`text-xs px-2 py-1 rounded-full ${
-                                    assignment.status === 'pending' 
-                                      ? 'bg-yellow-100 text-yellow-700'
-                                      : 'bg-green-100 text-green-700'
-                                  }`}>
-                                    {assignment.status}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <ClockIcon className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded-full">
+                              {course.nextClass}
+                            </span>
                           </div>
                         </div>
+
+                        {/* Progress Bar */}
+                        <div className="mt-2">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-gray-600">Progress</span>
+                            <span className="text-blue-600 font-medium">{course.progress}%</span>
+                          </div>
+                          <div className="bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                              style={{ width: `${course.progress}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Topics Progress */}
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Topics Progress</p>
+                          <div className="flex gap-1">
+                            {course.topics.map((topic) => (
+                              <div
+                                key={topic.id}
+                                className={`flex-1 h-1 rounded-full ${
+                                  topic.completed ? 'bg-green-500' : 'bg-gray-200'
+                                }`}
+                                title={topic.title}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Resources and Assignments Tabs */}
+                        <div className="mt-4 border-t pt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-medium text-gray-700 mb-2">Recent Resources</h4>
+                              <div className="space-y-2">
+                                {course.resources.slice(0, 2).map(resource => (
+                                  <a
+                                    key={resource.id}
+                                    href={resource.downloadUrl}
+                                    className="flex items-center p-2 hover:bg-gray-50 rounded-lg group"
+                                  >
+                                    <DocumentIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 mr-2" />
+                                    <span className="text-sm text-gray-600 group-hover:text-blue-600">
+                                      {resource.title}
+                                    </span>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-700 mb-2">Upcoming Tasks</h4>
+                              <div className="space-y-2">
+                                {course.assignments.map(assignment => (
+                                  <div
+                                    key={assignment.id}
+                                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg"
+                                  >
+                                    <span className="text-sm text-gray-600">{assignment.title}</span>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${
+                                      assignment.status === 'pending' 
+                                        ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-green-100 text-green-700'
+                                    }`}>
+                                      {assignment.status}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 

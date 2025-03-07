@@ -8,8 +8,6 @@ import {
   DocumentCheckIcon,
   AcademicCapIcon,
   PlusIcon,
-  EnvelopeIcon,
-  Bars3Icon,
   XMarkIcon,
   VideoCameraIcon,
   ClockIcon,
@@ -25,6 +23,9 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { useNavigate } from 'react-router-dom';
+import { TopicModal } from '../../components/modals/TopicModal';
+import { Topic } from '../../types/unit';
+import DashboardHeader from '../../components/DashboardHeader';
 
 interface ClassData {
   id: number;
@@ -79,14 +80,70 @@ interface ScheduledClass {
   recording?: string;
 }
 
-const TeacherDashboard = () => {
+interface TopicItem {
+  id: number;
+  title: string;
+  content: string;
+  questions: {
+    id: number;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+  }[];
+}
+
+interface Topic {
+  id: number;
+  title: string;
+  content: string;
+  completed: boolean;
+  studentProgress?: { studentId: number }[];
+  questions: {
+    id: number;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+  }[];
+}
+
+interface Course {
+  id: number;
+  name: string;
+  students: number;
+  nextClass: string;
+  progress: number;
+  topics: Topic[];
+}
+
+const InstructorDashboard = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState('overview');
-  const [courses] = useState([
-    { id: 1, name: 'Advanced Mathematics', students: 30, nextClass: '2:30 PM Today', progress: 75 },
-    { id: 2, name: 'Computer Science', students: 25, nextClass: '10:00 AM Tomorrow', progress: 60 },
-    { id: 3, name: 'Physics 101', students: 28, nextClass: '1:15 PM Tomorrow', progress: 80 },
+  const [courses, setCourses] = useState<Course[]>([
+    { 
+      id: 1, 
+      name: 'Advanced Mathematics', 
+      students: 30, 
+      nextClass: '2:30 PM Today', 
+      progress: 75,
+      topics: []
+    },
+    { 
+      id: 2, 
+      name: 'Computer Science', 
+      students: 25, 
+      nextClass: '10:00 AM Tomorrow', 
+      progress: 60,
+      topics: []
+    },
+    { 
+      id: 3, 
+      name: 'Physics 101', 
+      students: 28, 
+      nextClass: '1:15 PM Tomorrow', 
+      progress: 80,
+      topics: []
+    },
   ]);
 
   const [discussionGroups, setDiscussionGroups] = useState([
@@ -178,16 +235,46 @@ const TeacherDashboard = () => {
   const [scheduledClasses, setScheduledClasses] = useState<ScheduledClass[]>([
     {
       id: 1,
-      title: 'Introduction to Machine Learning',
-      course: 'Advanced Mathematics',
+      title: 'Introduction to Programming',
+      course: 'Computer Science',
       date: '2024-03-20',
-      time: '10:00 AM - 11:30 AM',
+      time: '10:00 AM',
       status: 'upcoming',
+      meetingLink: 'https://meet.google.com/abc-defg-hij'
     },
     // Add more sample classes...
   ]);
 
   const [isScheduleClassModalOpen, setIsScheduleClassModalOpen] = useState(false);
+
+  const units = [
+    {
+      id: 1,
+      name: 'Machine Learning',
+      code: 'CS301',
+      topics: [
+        {
+          id: 1,
+          title: 'Introduction to Machine Learning',
+          content: 'Machine learning is...',
+          questions: [
+            {
+              id: 1,
+              question: 'What is Machine Learning?',
+              options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+              correctAnswer: 'Option 2'
+            }
+          ]
+        }
+      ]
+    }
+  ];
+
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
+  const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedTopic, setSelectedTopic] = useState<TopicItem | null>(null);
 
   const navItems = [
     { id: 'overview', icon: BookOpenIcon, label: 'Overview' },
@@ -290,6 +377,49 @@ const TeacherDashboard = () => {
     }
 
     setIsNotificationModalOpen(false);
+  };
+
+  const handleTopicSubmit = (topicData: Omit<Topic, 'id' | 'completed'>) => {
+    const newTopic: Topic = {
+      ...topicData,
+      id: selectedTopic?.id || Date.now(),
+      completed: false,
+      studentProgress: []
+    };
+
+    const updatedCourses = courses.map(course => {
+      if (course.id === selectedCourse?.id) {
+        return {
+          ...course,
+          topics: selectedTopic
+            ? course.topics.map(t => t.id === selectedTopic.id ? newTopic : t)
+            : [...course.topics, newTopic]
+        };
+      }
+      return course;
+    });
+
+    setCourses(updatedCourses);
+    setIsTopicModalOpen(false);
+    setSelectedTopic(null);
+  };
+
+  const updateCourseProgress = (courseId: number) => {
+    setCourses(courses.map(course => {
+      if (course.id === courseId) {
+        const totalTopics = course.topics.length;
+        const completedTopics = course.topics.filter(topic => {
+          const studentsCompleted = topic.studentProgress?.length || 0;
+          return (studentsCompleted / course.students) * 100 >= 70;
+        }).length;
+        
+        return {
+          ...course,
+          progress: totalTopics ? Math.round((completedTopics / totalTopics) * 100) : 0
+        };
+      }
+      return course;
+    }));
   };
 
   const renderContent = () => {
@@ -672,6 +802,198 @@ const TeacherDashboard = () => {
           </div>
         );
 
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="flex items-center">
+                  <UsersIcon className="w-12 h-12 text-blue-500" />
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Total Students</h3>
+                    <p className="text-2xl font-semibold text-gray-800">{studentStats.totalStudents}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="flex items-center">
+                  <CalendarIcon className="w-12 h-12 text-green-500" />
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Avg. Attendance</h3>
+                    <p className="text-2xl font-semibold text-gray-800">{studentStats.averageAttendance}%</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="flex items-center">
+                  <AcademicCapIcon className="w-12 h-12 text-purple-500" />
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Avg. Grade</h3>
+                    <p className="text-2xl font-semibold text-gray-800">{studentStats.averageGrade}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <div className="flex items-center">
+                  <ChatBubbleLeftRightIcon className="w-12 h-12 text-yellow-500" />
+                  <div className="ml-4">
+                    <h3 className="text-sm font-medium text-gray-500">Active Discussions</h3>
+                    <p className="text-2xl font-semibold text-gray-800">{studentStats.activeDiscussions}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Courses Section with Topic Management */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <BookOpenIcon className="w-6 h-6 mr-2 text-blue-600" />
+                  Your Courses
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map(course => (
+                  <div key={course.id} className="border rounded-xl p-6 hover:shadow-md transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-semibold text-lg">{course.name}</h3>
+                        <p className="text-sm text-gray-600">{course.students} Students</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedCourse(course);
+                          setIsTopicModalOpen(true);
+                        }}
+                        className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                      >
+                        Add Topic
+                      </button>
+                    </div>
+
+                    {/* Topics List */}
+                    <div className="mt-4 space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">Topics</h4>
+                      {course.topics?.map((topic: TopicItem) => (
+                        <div
+                          key={topic.id}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                        >
+                          <span className="text-sm">{topic.title}</span>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedCourse(course);
+                                setSelectedTopic(topic);
+                                setIsTopicModalOpen(true);
+                              }}
+                              className="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                const updatedCourses = courses.map(c => {
+                                  if (c.id === course.id) {
+                                    return {
+                                      ...c,
+                                      topics: c.topics.filter(t => t.id !== topic.id)
+                                    };
+                                  }
+                                  return c;
+                                });
+                                setCourses(updatedCourses);
+                              }}
+                              className="text-sm text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {(!course.topics || course.topics.length === 0) && (
+                        <p className="text-sm text-gray-500 italic">No topics yet</p>
+                      )}
+                    </div>
+
+                    {/* Course Progress */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600">Progress</span>
+                        <span className="text-blue-600">{course.progress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${course.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Other sections... */}
+          </div>
+        );
+
+      case 'courses':
+        return (
+          <div className="space-y-6">
+            {/* ... existing content ... */}
+            
+            {/* Units Management Section */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Unit Management</h2>
+                <button
+                  onClick={() => setIsUnitModalOpen(true)}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <PlusIcon className="w-5 h-5 mr-2" />
+                  Create Unit
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {units.map(unit => (
+                  <div key={unit.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-semibold text-lg">{unit.name}</h3>
+                        <p className="text-gray-600">{unit.code}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedUnit(unit);
+                          setIsTopicModalOpen(true);
+                        }}
+                        className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                      >
+                        Add Topic
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {unit.topics.map(topic => (
+                        <div key={topic.id} className="bg-gray-50 p-3 rounded">
+                          <p className="font-medium">{topic.title}</p>
+                          <p className="text-sm text-gray-600">
+                            {topic.questions.length} questions
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="space-y-6">
@@ -838,46 +1160,9 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-40">
-        <div className="flex items-center justify-between px-4 h-16">
-          {/* Left side - Menu button and logo */}
-          <div className="flex items-center lg:w-64">
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
-            >
-              <Bars3Icon className="h-6 w-6" />
-            </button>
-            <div className="lg:hidden ml-2">
-              <AcademicCapIcon className="h-8 w-8 text-blue-600" />
-            </div>
-          </div>
-
-          {/* Right side - Actions and profile */}
-          <div className="flex items-center justify-end flex-1 space-x-4">
-            <div className="hidden sm:flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Spring 2024</span>
-              <span className="text-gray-300">|</span>
-            </div>
-            <button
-              onClick={() => setIsNotificationModalOpen(true)}
-              className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <EnvelopeIcon className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Send Message</span>
-            </button>
-            <div className="flex items-center border-l pl-4 ml-4">
-              <div className="hidden sm:block text-right mr-3">
-                <p className="text-sm font-medium text-gray-900">Prof. Smith</p>
-                <p className="text-xs text-gray-500">Teacher</p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-600">PS</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <div className="fixed top-0 right-0 left-0 lg:left-64 z-10">
+        <DashboardHeader userRole="Instructor" userName="Dr. Johnson" />
+      </div>
 
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
@@ -897,7 +1182,7 @@ const TeacherDashboard = () => {
               <AcademicCapIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Teacher Portal</h2>
+              <h2 className="text-xl font-bold text-gray-800">Instructor Portal</h2>
               <p className="text-sm text-gray-500">Spring 2024</p>
             </div>
           </div>
@@ -932,19 +1217,10 @@ const TeacherDashboard = () => {
         <div className="p-4 sm:p-6 lg:p-8">
           <div className="mb-8">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl shadow-lg">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
-                  <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
-                </div>
-                <button
-                  onClick={() => setIsNotificationModalOpen(true)}
-                  className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 w-full sm:w-auto justify-center"
-                >
-                  <EnvelopeIcon className="w-5 h-5 mr-2" />
-                  Send Class Message
-                </button>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                Welcome back, Dr. Johnson! 👋
+              </h1>
+              <p className="text-blue-100">Here's your teaching overview for today.</p>
             </div>
           </div>
           
@@ -986,6 +1262,16 @@ const TeacherDashboard = () => {
           setScheduledClasses([...scheduledClasses, newClass]);
           setIsScheduleClassModalOpen(false);
         }}
+      />
+
+      <TopicModal
+        isOpen={isTopicModalOpen}
+        onClose={() => {
+          setIsTopicModalOpen(false);
+          setSelectedTopic(null);
+        }}
+        onSubmit={handleTopicSubmit}
+        initialData={selectedTopic}
       />
 
       {/* Add Admin Access Button if user has admin privileges */}
@@ -1125,7 +1411,9 @@ const ScheduleClassModal = ({
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Schedule Online Class</h3>
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+          Schedule Instructor Session
+        </h3>
         <form onSubmit={(e) => {
           e.preventDefault();
           onSubmit(formData);
@@ -1208,4 +1496,4 @@ const ScheduleClassModal = ({
   );
 };
 
-export default TeacherDashboard;
+export default InstructorDashboard;

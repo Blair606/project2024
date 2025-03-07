@@ -24,7 +24,7 @@ import {
 } from 'recharts';
 import PaymentModal from '../../components/PaymentModal';
 
-const ParentDashboard = () => {
+const GuardianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [studentInfo] = useState({
     name: 'Alex Smith',
@@ -76,7 +76,7 @@ const ParentDashboard = () => {
   ]);
 
   const [upcomingEvents] = useState([
-    { id: 1, title: 'Parent-Teacher Meeting', date: 'Mar 25, 2024', time: '3:00 PM' },
+    { id: 1, title: 'Guardian-Instructor Meeting', date: 'Mar 25, 2024', time: '3:00 PM' },
     { id: 2, title: 'Science Fair', date: 'Apr 5, 2024', time: '10:00 AM' },
     { id: 3, title: 'Sports Day', date: 'Apr 12, 2024', time: '9:00 AM' },
   ]);
@@ -587,7 +587,7 @@ const ParentDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Modified Header - moved to the right */}
       <div className="fixed top-0 right-0 left-0 lg:left-64 z-10 transition-all duration-300">
-        <DashboardHeader userRole="Parent" userName="Mr. Smith" />
+        <DashboardHeader userRole="Guardian" userName="Mr. Smith" />
       </div>
       
       {/* Mobile Menu Button */}
@@ -611,7 +611,7 @@ const ParentDashboard = () => {
               <AcademicCapIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Parent Portal</h2>
+              <h2 className="text-xl font-bold text-gray-800">Guardian Portal</h2>
               <p className="text-sm text-gray-500">Spring 2024</p>
             </div>
           </div>
@@ -672,4 +672,4 @@ const ParentDashboard = () => {
   );
 };
 
-export default ParentDashboard;
+export default GuardianDashboard;

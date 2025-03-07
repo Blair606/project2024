@@ -5,10 +5,7 @@ import {
   UserGroupIcon,
   AcademicCapIcon,
   UserIcon,
-  Bars3Icon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
 import Navbar from '../layout/Navbar';
 import Footer from '../layout/Footer';
 
@@ -16,13 +13,13 @@ const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = (role: 'teacher' | 'student' | 'admin') => {
+  const handleLogin = (role: 'instructor' | 'student' | 'guardian' | 'admin') => {
     dispatch(setUser({
       id: '1',
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       email: `test${role}@example.com`,
       role,
-      isAdmin: role === 'teacher'
+      isAdmin: role === 'instructor'
     }));
 
     navigate(role === 'admin' ? '/admin' : `/dashboard/${role}`);
@@ -37,17 +34,17 @@ const HomePage = () => {
       color: 'bg-blue-500 hover:bg-blue-600',
     },
     {
-      title: 'Teacher Portal',
+      title: 'Instructor Portal',
       description: 'Manage courses, students, and track academic performance',
       icon: AcademicCapIcon,
-      path: '/dashboard/teacher',
+      path: '/dashboard/instructor',
       color: 'bg-green-500 hover:bg-green-600',
     },
     {
-      title: 'Parent Portal',
+      title: 'Guardian Portal',
       description: 'Monitor your child\'s progress and manage finances',
       icon: UserGroupIcon,
-      path: '/dashboard/parent',
+      path: '/dashboard/guardian',
       color: 'bg-purple-500 hover:bg-purple-600',
     },
   ];
@@ -83,7 +80,7 @@ const HomePage = () => {
                 </div>
                 <div className="p-4 md:p-6">
                   <button
-                    onClick={() => handleLogin(role.path.split('/')[2] as 'teacher' | 'student' | 'admin')}
+                    onClick={() => handleLogin(role.path.split('/')[2] as 'instructor' | 'student' | 'guardian' | 'admin')}
                     className="w-full bg-gray-900 text-white py-2 md:py-3 px-4 md:px-6 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     Access Portal

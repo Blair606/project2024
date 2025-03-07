@@ -7,7 +7,7 @@ interface Course {
   code: string;
   name: string;
   department: string;
-  teacher: string;
+  instructor: string;
   students: number;
   status: 'active' | 'inactive';
 }
@@ -18,15 +18,15 @@ interface CourseModalProps {
   onSubmit: (courseData: Omit<Course, 'id' | 'students'>) => void;
   course?: Course | null;
   departments: string[];
-  teachers: { id: string; name: string }[];
+  instructors: { id: string; name: string }[];
 }
 
-const CourseModal = ({ isOpen, onClose, onSubmit, course, departments, teachers }: CourseModalProps) => {
+const CourseModal = ({ isOpen, onClose, onSubmit, course, departments, instructors }: CourseModalProps) => {
   const [formData, setFormData] = useState<Omit<Course, 'id' | 'students'>>({
     code: '',
     name: '',
     department: '',
-    teacher: '',
+    instructor: '',
     status: 'active'
   });
 
@@ -36,7 +36,7 @@ const CourseModal = ({ isOpen, onClose, onSubmit, course, departments, teachers 
         code: course.code,
         name: course.name,
         department: course.department,
-        teacher: course.teacher,
+        instructor: course.instructor,
         status: course.status
       });
     } else {
@@ -44,7 +44,7 @@ const CourseModal = ({ isOpen, onClose, onSubmit, course, departments, teachers 
         code: '',
         name: '',
         department: '',
-        teacher: '',
+        instructor: '',
         status: 'active'
       });
     }
@@ -111,16 +111,16 @@ const CourseModal = ({ isOpen, onClose, onSubmit, course, departments, teachers 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Teacher</label>
+              <label className="block text-sm font-medium text-gray-700">Instructor</label>
               <select
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.teacher}
-                onChange={(e) => setFormData({ ...formData, teacher: e.target.value })}
+                value={formData.instructor}
+                onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
               >
-                <option value="">Select Teacher</option>
-                {teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.name}>{teacher.name}</option>
+                <option value="">Select Instructor</option>
+                {instructors.map((instructor) => (
+                  <option key={instructor.id} value={instructor.name}>{instructor.name}</option>
                 ))}
               </select>
             </div>

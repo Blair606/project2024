@@ -43,4 +43,6 @@ export interface Teacher extends BaseUser {
   subjects: string[];
 }
 
-export type User = Student | Teacher; 
+export type User = Student | Teacher;
+
+export type UserRole = 'admin' | 'instructor' | 'guardian' | 'student'; 

@@ -1,23 +1,31 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+type UserRole = 'student' | 'admin' | 'instructor' | 'guardian';
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'teacher' | 'student';
-  isAdmin?: boolean; // For teachers who also have admin access
+  role: UserRole;
+  isAdmin: boolean;
 }
 
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    isAdmin: boolean;
+  } | null;
+  token: string | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
-  isAuthenticated: false,
+  token: null,
   loading: false,
   error: null,
 };
@@ -28,12 +36,12 @@ const authSlice = createSlice({
   reducers: {
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
-      state.isAuthenticated = true;
+      state.token = null; // Assuming token is not set on login
       state.error = null;
     },
     logout: (state) => {
       state.user = null;
-      state.isAuthenticated = false;
+      state.token = null;
       state.error = null;
     },
     setError: (state, action: PayloadAction<string>) => {

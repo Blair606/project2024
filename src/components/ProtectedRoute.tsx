@@ -1,26 +1,24 @@
 import { Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store/store';
+import { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole: 'admin' | 'teacher' | 'student' | 'parent';
+  children: ReactNode;
+  requiredRole: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const isAuthenticated = localStorage.getItem('token');
+  const userRole = localStorage.getItem('userRole');
 
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
   }
 
-  // Allow access if user is an admin or if they have the required role
-  if (user.isAdmin || user.role === requiredRole) {
-    return <>{children}</>;
+  if (!['admin', 'instructor', 'guardian', 'student'].includes(userRole || '')) {
+    return <Navigate to="/" />;
   }
 
-  // Redirect to their appropriate dashboard
-  return <Navigate to={`/dashboard/${user.role}`} replace />;
+  return children;
 };
 
 export default ProtectedRoute; 

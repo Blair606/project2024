@@ -158,7 +158,7 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, userType }: CreateUserModa
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                     <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      Add New {userType === 'student' ? 'Student' : 'Teacher'}
+                      Add New {userType === 'student' ? 'Student' : 'Instructor'}
                     </Dialog.Title>
 
                     <form onSubmit={handleSubmit} className="mt-6 space-y-6">
@@ -574,7 +574,7 @@ const CreateUserModal = ({ isOpen, onClose, onSubmit, userType }: CreateUserModa
                           type="submit"
                           className="inline-flex w-full justify-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 sm:ml-3 sm:w-auto"
                         >
-                          Add {userType === 'student' ? 'Student' : 'Teacher'}
+                          Add {userType === 'student' ? 'Student' : 'Instructor'}
                         </button>
                         <button
                           type="button"

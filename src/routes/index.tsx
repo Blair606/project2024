@@ -1,7 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from '../pages/dashboards/AdminDashboard';
-import TeacherDashboard from '../pages/dashboards/TeacherDashboard';
+import TeacherDashboard from '../pages/dashboards/InstructorDashboard';
 import Login from '../pages/Login';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes = () => {
   return (

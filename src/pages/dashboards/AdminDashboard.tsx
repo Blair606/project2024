@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import EditUserModal from "../../components/modals/EditUserModal";
-import DeleteUserModal from "../../components/modals/DeleteUserModal";
 import {
   UsersIcon,
   AcademicCapIcon,
@@ -14,11 +12,6 @@ import {
   BuildingLibraryIcon,
   XMarkIcon,
   Bars3Icon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  BanknotesIcon,
-  ClockIcon,
-  ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import DashboardHeader from "../../components/DashboardHeader";
 import CreateCourseModal, {
@@ -26,9 +19,6 @@ import CreateCourseModal, {
 } from "../../components/modals/CreateCourseModal";
 import CourseDetailsModal from "../../components/modals/CourseDetailsModal";
 import CreateUserModal from "../../components/modals/CreateUserModal";
-import CreateDepartmentModal, {
-  DepartmentFormData,
-} from "../../components/modals/CreateDepartmentModal";
 import { User, Student, Teacher } from "../../types/user";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -62,26 +52,6 @@ interface Course {
 }
 
 // Add Department interface
-interface Department {
-  id: string;
-  name: string;
-  code: string;
-  school: "SASA" | "SBE" | "SED" | "SEES" | "SHHS" | "HSSS" | "SPAS";
-  head: string;
-  description: string;
-  status: "active" | "inactive";
-  facultyCount: number;
-  studentsCount: number;
-  coursesCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Add new interfaces for finance filtering
-interface DateRange {
-  startDate: Date | null;
-  endDate: Date | null;
-}
 
 // Add new interfaces for settings
 interface SystemSettings {
@@ -212,51 +182,7 @@ const AdminDashboard = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userModalMode, setUserModalMode] = useState<"edit" | "delete">("edit");
 
-  // Add departments state
-  const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: "1",
-      name: "Department of Computer Science",
-      code: "CS",
-      school: "SPAS",
-      head: "Dr. John Smith",
-      description:
-        "The Department of Computer Science offers comprehensive programs in software development, artificial intelligence, and data science.",
-      status: "active",
-      facultyCount: 15,
-      studentsCount: 250,
-      coursesCount: 20,
-      createdAt: "2024-01-01",
-      updatedAt: "2024-01-01",
-    },
-    {
-      id: "2",
-      name: "Department of Mathematics",
-      code: "MATH",
-      school: "SPAS",
-      head: "Dr. Sarah Johnson",
-      description:
-        "The Mathematics Department provides strong foundations in pure and applied mathematics.",
-      status: "active",
-      facultyCount: 12,
-      studentsCount: 180,
-      coursesCount: 15,
-      createdAt: "2024-01-01",
-      updatedAt: "2024-01-01",
-    },
-  ]);
-
-  const [departmentSearchTerm, setDepartmentSearchTerm] = useState("");
-  const [departmentSchoolFilter, setDepartmentSchoolFilter] = useState("");
-  const [departmentStatusFilter, setDepartmentStatusFilter] = useState("");
-  const [currentDepartmentPage, setCurrentDepartmentPage] = useState(1);
-  const departmentsPerPage = 10;
-
-  // Add department modal state
-  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
-  const [editDepartmentData, setEditDepartmentData] = useState<
-    DepartmentFormData | undefined
-  >();
+  
 
   async function deleteUser(userId: string) {
     try {
@@ -313,45 +239,7 @@ const AdminDashboard = () => {
     },
   });
 
-  // Format currency in KSh
 
-  // Add department handlers
-  const handleCreateDepartment = (departmentData: DepartmentFormData) => {
-    const newDepartment = {
-      ...departmentData,
-      id: String(departments.length + 1),
-      facultyCount: 0,
-      studentsCount: 0,
-      coursesCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setDepartments([...departments, newDepartment]);
-  };
-
-  const handleEditDepartment = (departmentData: DepartmentFormData) => {
-    setDepartments(
-      departments.map((department) =>
-        department.id === departmentData.id
-          ? {
-              ...department,
-              ...departmentData,
-              updatedAt: new Date().toISOString(),
-            }
-          : department
-      )
-    );
-  };
-
-  const handleDeleteDepartment = (departmentId: string) => {
-    if (window.confirm("Are you sure you want to delete this department?")) {
-      setDepartments(
-        departments.filter((department) => department.id !== departmentId)
-      );
-    }
-  };
-
-  // Pagination Logic
 
   const handleCreateCourse = (courseData: CourseFormData) => {
     const newCourse: Course = {
@@ -385,21 +273,7 @@ const AdminDashboard = () => {
   };
 
   const renderContent = () => {
-    // Move filtered departments outside case block
-    const filteredDepartments = departments.filter((department) => {
-      const matchesSearch =
-        department.name
-          .toLowerCase()
-          .includes(departmentSearchTerm.toLowerCase()) ||
-        department.code
-          .toLowerCase()
-          .includes(departmentSearchTerm.toLowerCase());
-      const matchesSchool =
-        !departmentSchoolFilter || department.school === departmentSchoolFilter;
-      const matchesStatus =
-        !departmentStatusFilter || department.status === departmentStatusFilter;
-      return matchesSearch && matchesSchool && matchesStatus;
-    });
+    
 
     switch (activeTab) {
       case "overview":

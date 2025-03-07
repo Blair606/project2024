@@ -1,23 +1,50 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { useForm } from 'react-hook-form';
+
+interface SignInForm {
+  email: string;
+  password: string;
+}
 
 const SignIn: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const { register, handleSubmit } = useForm<SignInForm>();
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { login, user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitForm = async (data: SignInForm) => {
+    setError(null);
 
-    // Basic validation
-    if (!email || !password) {
+    if (!data.email || !data.password) {
       setError("Please fill in all fields.");
       return;
     }
 
-    // Simulate sign-in logic (replace with actual API call)
-    console.log("Signing in with:", { email, password });
-    setError(null);
+    try {
+      await login(data.email, data.password);
+      
+      // Use user from context
+      switch (user?.role) {
+        case 'student':
+          navigate('/dashboard/student');
+          break;
+        case 'teacher':
+          navigate('/dashboard/teacher');
+          break;
+        case 'parent':
+          navigate('/dashboard/parent');
+          break;
+        case 'admin':
+          navigate('/admin');
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
   };
 
   return (
@@ -29,7 +56,7 @@ const SignIn: React.FC = () => {
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(handleSubmitForm)}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -37,8 +64,7 @@ const SignIn: React.FC = () => {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email")}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your email"
               required
@@ -51,8 +77,7 @@ const SignIn: React.FC = () => {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register("password")}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your password"
               required
