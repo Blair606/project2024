@@ -1,194 +1,117 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CheckCircleIcon,
-  LockClosedIcon,
-  BookOpenIcon,
-} from '@heroicons/react/24/outline';
-import { Topic, Unit } from '../../types/unit';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import Navbar from '../../layout/Navbar';
+import Footer from '../../layout/Footer';
 
-const UnitView = () => {
-  const { unitId, topicId } = useParams();
-  const navigate = useNavigate();
-  const [unit, setUnit] = useState<Unit | null>(null);
-  const [currentTopic, setCurrentTopic] = useState<Topic | null>(null);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
+interface Unit {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  resources: Array<{
+    id: string;
+    title: string;
+    type: 'video' | 'document' | 'quiz';
+    url: string;
+  }>;
+}
 
-  useEffect(() => {
-    // In a real app, fetch from API
-    // For now, get from localStorage
-    const units = JSON.parse(localStorage.getItem('units') || '[]');
-    const foundUnit = units.find((u: Unit) => u.id === Number(unitId));
-    if (foundUnit) {
-      setUnit(foundUnit);
-      const topic = foundUnit.topics.find((t: Topic) => t.id === Number(topicId));
-      if (topic) {
-        setCurrentTopic(topic);
+const UnitView: React.FC = () => {
+  const { unitId } = useParams<{ unitId: string }>();
+  
+  // This would typically come from an API call
+  const [unit] = useState<Unit>({
+    id: unitId || '1',
+    title: 'Introduction to React',
+    description: 'Learn the fundamentals of React including components, props, and state.',
+    content: 'React is a JavaScript library for building user interfaces...',
+    resources: [
+      {
+        id: '1',
+        title: 'React Basics Video',
+        type: 'video',
+        url: 'https://example.com/video1'
+      },
+      {
+        id: '2',
+        title: 'React Documentation',
+        type: 'document',
+        url: 'https://example.com/docs'
+      },
+      {
+        id: '3',
+        title: 'React Quiz',
+        type: 'quiz',
+        url: 'https://example.com/quiz1'
       }
-    }
-  }, [unitId, topicId]);
-
-  const handleNextTopic = () => {
-    if (!unit || !currentTopic) return;
-    const currentIndex = unit.topics.findIndex(t => t.id === currentTopic.id);
-    if (currentIndex < unit.topics.length - 1) {
-      const nextTopic = unit.topics[currentIndex + 1];
-      navigate(`/unit/${unitId}/topic/${nextTopic.id}`);
-    }
-  };
-
-  const handlePreviousTopic = () => {
-    if (!unit || !currentTopic) return;
-    const currentIndex = unit.topics.findIndex(t => t.id === currentTopic.id);
-    if (currentIndex > 0) {
-      const previousTopic = unit.topics[currentIndex - 1];
-      navigate(`/unit/${unitId}/topic/${previousTopic.id}`);
-    }
-  };
-
-  const handleQuizSubmit = () => {
-    if (!currentTopic) return;
-    
-    const correctAnswers = currentTopic.questions.filter(q => 
-      answers[q.id] === q.correctAnswer
-    ).length;
-    
-    const score = (correctAnswers / currentTopic.questions.length) * 100;
-    
-    // Update topic completion status
-    const updatedTopic = {
-      ...currentTopic,
-      completed: true,
-      lastVisited: new Date().toISOString()
-    };
-    
-    // Update unit in localStorage
-    const units = JSON.parse(localStorage.getItem('units') || '[]');
-    const updatedUnits = units.map((u: Unit) => {
-      if (u.id === Number(unitId)) {
-        return {
-          ...u,
-          topics: u.topics.map(t => 
-            t.id === updatedTopic.id ? updatedTopic : t
-          ),
-          progress: Math.round(
-            (u.topics.filter(t => t.completed).length / u.topics.length) * 100
-          )
-        };
-      }
-      return u;
-    });
-    
-    localStorage.setItem('units', JSON.stringify(updatedUnits));
-    setQuizSubmitted(true);
-    
-    // If score is sufficient, enable next topic
-    if (score >= 70) {
-      setTimeout(handleNextTopic, 2000);
-    }
-  };
-
-  if (!unit || !currentTopic) {
-    return <div>Loading...</div>;
-  }
+    ]
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Navigation */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center text-gray-600 hover:text-gray-900"
-          >
-            <ChevronLeftIcon className="w-5 h-5 mr-2" />
-            Back to Dashboard
-          </button>
-          <div className="text-sm text-gray-500">
-            {unit.code} - {unit.name}
-          </div>
-        </div>
-
-        {/* Topic Content */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-4">{currentTopic.title}</h1>
-          <div className="prose max-w-none mb-8">
-            {currentTopic.content}
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Navbar />
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Unit Header */}
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{unit.title}</h1>
+            <p className="text-gray-600">{unit.description}</p>
           </div>
 
-          {!showQuiz ? (
-            <button
-              onClick={() => setShowQuiz(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Take Quiz to Continue
-            </button>
-          ) : (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Topic Quiz</h2>
-              {currentTopic.questions.map(question => (
-                <div key={question.id} className="border rounded-lg p-4">
-                  <p className="font-medium mb-3">{question.question}</p>
-                  <div className="space-y-2">
-                    {question.options.map((option, index) => (
-                      <label
-                        key={index}
-                        className="flex items-center space-x-3 p-2 rounded hover:bg-gray-50"
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.id}`}
-                          value={option}
-                          onChange={() => setAnswers({
-                            ...answers,
-                            [question.id]: option
-                          })}
-                          disabled={quizSubmitted}
-                          className="text-blue-600"
-                        />
-                        <span>{option}</span>
-                      </label>
-                    ))}
+          {/* Main Content */}
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Content</h2>
+            <div className="prose max-w-none">
+              {unit.content}
+            </div>
+          </div>
+
+          {/* Resources */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Resources</h2>
+            <div className="grid gap-4">
+              {unit.resources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-shrink-0 mr-4">
+                    {resource.type === 'video' && (
+                      <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    {resource.type === 'document' && (
+                      <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
+                    {resource.type === 'quiz' && (
+                      <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    )}
                   </div>
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-medium text-gray-900">{resource.title}</h3>
+                    <p className="text-sm text-gray-500 capitalize">{resource.type}</p>
+                  </div>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    Access
+                  </a>
                 </div>
               ))}
-              {!quizSubmitted && (
-                <button
-                  onClick={handleQuizSubmit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  disabled={Object.keys(answers).length !== currentTopic.questions.length}
-                >
-                  Submit Quiz
-                </button>
-              )}
             </div>
-          )}
+          </div>
         </div>
-
-        {/* Topic Navigation */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={handlePreviousTopic}
-            disabled={unit.topics[0].id === currentTopic.id}
-            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
-          >
-            <ChevronLeftIcon className="w-5 h-5 mr-2" />
-            Previous Topic
-          </button>
-          <button
-            onClick={handleNextTopic}
-            disabled={!currentTopic.completed || unit.topics[unit.topics.length - 1].id === currentTopic.id}
-            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
-          >
-            Next Topic
-            <ChevronRightIcon className="w-5 h-5 ml-2" />
-          </button>
-        </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 };
