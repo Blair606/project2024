@@ -1,23 +1,49 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    // Basic validation
     if (!email || !password) {
       setError("Please fill in all fields.");
       return;
     }
 
-    // Simulate sign-in logic (replace with actual API call)
-    console.log("Signing in with:", { email, password });
-    setError(null);
+    try {
+      await login(email, password);
+      
+      // Get the user from context after login
+      const { user } = useAuth();
+      
+      // Redirect based on user role
+      switch (user?.role) {
+        case 'student':
+          navigate('/dashboard/student');
+          break;
+        case 'teacher':
+          navigate('/dashboard/teacher');
+          break;
+        case 'parent':
+          navigate('/dashboard/parent');
+          break;
+        case 'admin':
+          navigate('/admin');
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
   };
 
   return (

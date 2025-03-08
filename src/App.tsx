@@ -10,51 +10,54 @@ import { store } from './store/store'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import SignUpPage from './pages/SignUpPage'
+import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route 
-            path="/dashboard/student" 
-            element={
-              <ProtectedRoute requiredRole="student">
-                <StudentDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/dashboard/teacher" 
-            element={
-              <ProtectedRoute requiredRole="teacher">
-                <TeacherDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/dashboard/parent" 
-            element={
-              <ProtectedRoute requiredRole="parent">
-                <ParentDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path='/signin' element={<Login /> } />
-          <Route path='/signup' element={<SignUpPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </Provider>
+    // <AuthProvider>
+      <Provider store={store}>
+        <Router>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route 
+              path="/dashboard/student" 
+              element={
+                // <ProtectedRoute requiredRole="student">
+                  <StudentDashboard />
+                // </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/teacher" 
+              element={
+                // <ProtectedRoute requiredRole="teacher">
+                  <TeacherDashboard />
+                // </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/parent" 
+              element={
+                // <ProtectedRoute requiredRole="parent">
+                  <ParentDashboard />
+                // </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                // <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                // </ProtectedRoute>
+              } 
+            />
+            <Route path='/signin' element={<Login /> } />
+            <Route path='/signup' element={<SignUpPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </Provider>
+    // </AuthProvider>
   )
 }
 

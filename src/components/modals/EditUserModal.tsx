@@ -9,12 +9,18 @@ interface EditUserModalProps {
   onSave: (userData: Partial<User>) => void;
 }
 
+interface UserFormData {
+  firstName?: string;
+  email?: string;
+}
+
 const EditUserModal = ({ isOpen, onClose, user, onSave }: EditUserModalProps) => {
-  const [formData, setFormData] = useState<Partial<User>>({});
+  const [formData, setFormData] = useState<UserFormData>({});
 
   useEffect(() => {
     if (user) {
-      setFormData(user);
+      const { firstName, email } = user;
+      setFormData({ firstName, email });
     }
   }, [user]);
 
@@ -38,15 +44,6 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }: EditUserModalProps) =>
                 type="text"
                 value={formData.firstName || ''}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Last Name</label>
-              <input
-                type="text"
-                value={formData.lastName || ''}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               />
             </div>
