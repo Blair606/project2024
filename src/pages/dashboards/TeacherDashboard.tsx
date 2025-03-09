@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   UsersIcon,
   BookOpenIcon,
@@ -15,6 +15,7 @@ import {
   ClockIcon,
   Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
 import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
@@ -25,6 +26,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 
 interface ClassData {
   id: number;
@@ -85,6 +87,24 @@ interface Assignment {
   courseId: number;
   dueDate: string;
   type: string;
+}
+
+interface ProfileData {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  enableMFA: boolean;
+  staffId: string;
+  department: string;
+  phone: string;
+  nationalId: string;
+  address: string;
+  dateOfBirth: string;
+  emergencyContact: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const TeacherDashboard = () => {
@@ -196,6 +216,12 @@ const TeacherDashboard = () => {
 
   const [isScheduleClassModalOpen, setIsScheduleClassModalOpen] = useState(false);
 
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -213,6 +239,7 @@ const TeacherDashboard = () => {
     { id: 'online-classes', icon: VideoCameraIcon, label: 'Online Classes' },
     { id: 'students', icon: UsersIcon, label: 'Students' },
     { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
+    { id: 'profile', icon: UserCircleIcon, label: 'Profile' },
     { id: 'divider', type: 'divider' },
     { 
       id: 'logout', 
@@ -688,6 +715,81 @@ const TeacherDashboard = () => {
           </div>
         );
 
+      case 'profile':
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
+              <div className="flex items-center space-x-6 mb-6">
+                <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
+                  <UserCircleIcon className="w-16 h-16 text-blue-500" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {profileData ? `${profileData.firstName} ${profileData.lastName}` : 'Loading...'}
+                  </h2>
+                  <p className="text-gray-600">{profileData?.staffId || 'Loading...'}</p>
+                  <p className="text-blue-600">{profileData?.department || 'Loading...'}</p>
+                </div>
+                <button className="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                  Edit Profile
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Professional Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-gray-600">
+                  <div>
+                    <p><span className="font-medium">Staff ID:</span> {profileData?.staffId}</p>
+                    <p><span className="font-medium">Department:</span> {profileData?.department}</p>
+                    <p><span className="font-medium">Role:</span> {profileData?.role}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-gray-600">
+                  <div>
+                    <p><span className="font-medium">Email:</span> {profileData?.email}</p>
+                    <p><span className="font-medium">Phone:</span> {profileData?.phone}</p>
+                    <p><span className="font-medium">National ID:</span> {profileData?.nationalId}</p>
+                    <p><span className="font-medium">Address:</span> {profileData?.address}</p>
+                  </div>
+                  <div>
+                    <p><span className="font-medium">Date of Birth:</span> {new Date(profileData?.dateOfBirth || '').toLocaleDateString()}</p>
+                    <p><span className="font-medium">Emergency Contact:</span> {profileData?.emergencyContact}</p>
+                    <p><span className="font-medium">MFA Status:</span> {profileData?.enableMFA ? 'Enabled' : 'Disabled'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm">
+                <h3 className="text-lg font-semibold mb-4">Account Overview</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Status</span>
+                    <span className="font-bold text-green-600">Active</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Member Since</span>
+                    <span className="font-medium text-gray-800">
+                      {new Date(profileData?.createdAt || '').toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Last Updated</span>
+                    <span className="font-medium text-gray-800">
+                      {new Date(profileData?.updatedAt || '').toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="space-y-6">
@@ -845,6 +947,45 @@ const TeacherDashboard = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const userId = user?.id;
+        if (!userId) {
+          throw new Error('User ID not found');
+        }
+
+        const response = await axios.get(`http://localhost:3000/api/users/users/${userId}`);
+        console.log('Profile data received:', response.data);
+        setProfileData(response.data);
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+        setError('Failed to load profile data. Please try again later.');
+        toast.error('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchProfileData();
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showProfileMenu && !(event.target as Element).closest('.relative')) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-40">
@@ -875,12 +1016,49 @@ const TeacherDashboard = () => {
             </button>
             <div className="flex items-center border-l pl-4 ml-4">
               <div className="hidden sm:block text-right mr-3">
-                <p className="text-sm font-medium text-gray-900">Prof. Smith</p>
-                <p className="text-xs text-gray-500">Teacher</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {isLoading ? 'Loading...' : profileData ? `${profileData.firstName} ${profileData.lastName}` : 'Teacher'}
+                </p>
+                <p className="text-xs text-gray-500">{profileData?.department || 'Department'}</p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-600">PS</span>
-              </div>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="relative w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"
+              >
+                <span className="text-sm font-medium text-blue-600">
+                  {profileData?.firstName ? profileData.firstName[0] + profileData.lastName[0] : 'T'}
+                </span>
+              </button>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border top-12">
+                  <button
+                    onClick={() => {
+                      setActiveTab('profile');
+                      setShowProfileMenu(false);
+                    }}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    View Profile
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('settings');
+                      setShowProfileMenu(false);
+                    }}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    Settings
+                  </button>
+                  <div className="border-t border-gray-100"></div>
+                  <button
+                    onClick={handleLogout}
+                    className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -961,8 +1139,12 @@ const TeacherDashboard = () => {
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl shadow-lg">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back, Prof. Smith! 👋</h1>
-                  <p className="text-blue-100">You have {courses.length} classes scheduled for today.</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Welcome back, {isLoading ? 'Teacher' : profileData ? `${profileData.firstName} ${profileData.lastName}` : 'Teacher'}! 👋
+                  </h1>
+                  <p className="text-blue-100">
+                    {profileData?.department ? `${profileData.department} Department` : 'Loading department...'}
+                  </p>
                 </div>
                 <button
                   onClick={() => setIsNotificationModalOpen(true)}
