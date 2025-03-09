@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 
 interface DiscussionTopic {
   id: number;
@@ -40,12 +41,48 @@ interface DiscussionGroup {
   topics: DiscussionTopic[];
 }
 
+interface Guardian {
+  name: string;
+  phone: string;
+  relationship: string;
+  _id: string;
+}
+
+interface ProfileData {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  enableMFA: boolean;
+  studentId?: string;
+  studyLevel?: string;
+  school?: string;
+  program?: string;
+  specialization?: string;
+  yearOfStudy?: number;
+  semester?: number;
+  dateOfBirth: string;
+  nationalId: string;
+  phone: string;
+  address: string;
+  guardians: Guardian[];
+  emergencyContact: string;
+  staffId?: string;
+  department?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const StudentDashboard = () => {
-  const { logout } = useAuth();
+  const { logout, getUserId } = useAuth();
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('courses');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [currentUnits] = useState([
     {
@@ -217,26 +254,6 @@ const StudentDashboard = () => {
     ]
   });
 
-  // Update profile data
-  const [profileData] = useState({
-    name: 'Bildard Blair Odhiambo',
-    studentId: '2021/CS/31442',
-    course: 'Bachelor of Science in Computer Science',
-    year: '3rd Year, 2nd Semester',
-    email: 'bildard.blair@university.edu',
-    achievements: [
-      { id: 1, title: 'Dean\'s List 2023', icon: '��' },
-      { id: 2, title: 'Best Programming Project', icon: '' },
-      { id: 3, title: 'Research Excellence', icon: '🔬' },
-    ],
-    currentSemester: {
-      name: '3rd Year, 2nd Semester',
-      status: 'activated', // or 'pending' or 'inactive'
-      activationDate: '2024-01-15',
-      nextPaymentDue: '2024-04-01'
-    }
-  });
-
   // Update weekly schedule
   const [weeklySchedule] = useState([
     {
@@ -394,6 +411,32 @@ const StudentDashboard = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const userId = getUserId();
+        if (!userId) {
+          throw new Error('User ID not found');
+        }
+
+        const response = await axios.get(`http://localhost:3000/api/users/users/${userId}`);
+        console.log('Profile data received:', response.data);
+        setProfileData(response.data);
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
+        setError('Failed to load profile data. Please try again later.');
+        toast.error('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [getUserId]);
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -947,56 +990,72 @@ const StudentDashboard = () => {
                   <UserCircleIcon className="w-16 h-16 text-blue-500" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">{profileData.name}</h2>
-                  <p className="text-gray-600">{profileData.studentId}</p>
-                  <p className="text-blue-600">{profileData.course} • {profileData.year}</p>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {profileData ? `${profileData.firstName} ${profileData.lastName}` : 'Loading...'}
+                  </h2>
+                  <p className="text-gray-600">{profileData?.studentId || profileData?.staffId || 'N/A'}</p>
+                  <p className="text-blue-600">
+                    {profileData?.program || profileData?.department || 'N/A'}
+                  </p>
                 </div>
                 <button className="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                   Edit Profile
                 </button>
               </div>
               
-              {/* Contact Information */}
+              {/* Academic Information */}
+              {profileData?.role === 'student' && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">Academic Information</h3>
+                  <div className="grid grid-cols-2 gap-4 text-gray-600">
+                    <div>
+                      <p><span className="font-medium">Study Level:</span> {profileData.studyLevel}</p>
+                      <p><span className="font-medium">School:</span> {profileData.school}</p>
+                      <p><span className="font-medium">Program:</span> {profileData.program}</p>
+                      <p><span className="font-medium">Specialization:</span> {profileData.specialization}</p>
+                    </div>
+                    <div>
+                      <p><span className="font-medium">Year of Study:</span> {profileData.yearOfStudy}</p>
+                      <p><span className="font-medium">Semester:</span> {profileData.semester}</p>
+                      <p><span className="font-medium">Student ID:</span> {profileData.studentId}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Personal Information */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Contact Information</h3>
-                <div className="space-y-2 text-gray-600">
-                  <p>Email: {profileData.email}</p>
+                <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-gray-600">
+                  <div>
+                    <p><span className="font-medium">Email:</span> {profileData?.email}</p>
+                    <p><span className="font-medium">Phone:</span> {profileData?.phone}</p>
+                    <p><span className="font-medium">National ID:</span> {profileData?.nationalId}</p>
+                    <p><span className="font-medium">Address:</span> {profileData?.address}</p>
+                  </div>
+                  <div>
+                    <p><span className="font-medium">Date of Birth:</span> {new Date(profileData?.dateOfBirth).toLocaleDateString()}</p>
+                    <p><span className="font-medium">Emergency Contact:</span> {profileData?.emergencyContact}</p>
+                    <p><span className="font-medium">Role:</span> {profileData?.role}</p>
+                    <p><span className="font-medium">MFA Status:</span> {profileData?.enableMFA ? 'Enabled' : 'Disabled'}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Achievements */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Achievements</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profileData.achievements.map(achievement => (
-                    <div key={achievement.id} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <span className="text-2xl">{achievement.icon}</span>
-                      <span className="font-medium text-blue-900">{achievement.title}</span>
+              {/* Guardian Information */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Guardian Information</h3>
+                <div className="space-y-4">
+                  {profileData?.guardians.map((guardian, index) => (
+                    <div key={guardian._id} className="p-4 bg-gray-50 rounded-lg">
+                      <p className="font-medium mb-2">Guardian {index + 1}</p>
+                      <div className="grid grid-cols-2 gap-4 text-gray-600">
+                        <p><span className="font-medium">Name:</span> {guardian.name}</p>
+                        <p><span className="font-medium">Phone:</span> {guardian.phone}</p>
+                        <p><span className="font-medium">Relationship:</span> {guardian.relationship}</p>
+                      </div>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              {/* Add this new section for semester activation status */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Current Semester Status</h3>
-                <div className="p-4 rounded-lg border-2 border-gray-100">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-gray-700 font-medium">{profileData.currentSemester.name}</span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      profileData.currentSemester.status === 'activated' 
-                        ? 'bg-green-100 text-green-800'
-                        : profileData.currentSemester.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {profileData.currentSemester.status.charAt(0).toUpperCase() + profileData.currentSemester.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>Activation Date: {profileData.currentSemester.activationDate}</p>
-                    <p>Next Payment Due: {profileData.currentSemester.nextPaymentDue}</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1004,15 +1063,23 @@ const StudentDashboard = () => {
             {/* Quick Stats */}
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-xl shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">Academic Overview</h3>
+                <h3 className="text-lg font-semibold mb-4">Account Overview</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Current GPA</span>
-                    <span className="font-bold text-blue-600">{academicResults.gpa}</span>
+                    <span className="text-gray-600">Status</span>
+                    <span className="font-bold text-green-600">Active</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Credits Completed</span>
-                    <span className="font-bold text-green-600">{academicResults.totalCredits}</span>
+                    <span className="text-gray-600">Member Since</span>
+                    <span className="font-medium text-gray-800">
+                      {new Date(profileData?.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Last Updated</span>
+                    <span className="font-medium text-gray-800">
+                      {new Date(profileData?.updatedAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1280,12 +1347,14 @@ const StudentDashboard = () => {
                 className="flex items-center border-l pl-4 ml-4 cursor-pointer"
               >
                 <div className="hidden sm:block text-right mr-3">
-                  <p className="text-sm font-medium text-gray-900">{profileData.name}</p>
-                  <p className="text-xs text-gray-500">Student</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {isLoading ? 'Loading...' : profileData ? `${profileData.firstName} ${profileData.lastName}` : 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500">{profileData?.role || 'User'}</p>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-sm font-medium text-blue-600">
-                    {profileData.name.split(' ').map(n => n[0]).join('')}
+                    {profileData?.firstName.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
               </button>
@@ -1382,10 +1451,10 @@ const StudentDashboard = () => {
           <div className="mb-8">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl shadow-lg">
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                Welcome back, {profileData.name.split(' ')[0]}! 👋
+                Welcome back, {isLoading ? 'User' : profileData?.firstName || 'User'}! 👋
               </h1>
               <p className="text-blue-100">
-                Your learning journey continues. Keep up the excellent work in {profileData.course}!
+                Your learning journey continues. Keep up the excellent work in {profileData?.department || 'your studies'}!
               </p>
             </div>
           </div>
