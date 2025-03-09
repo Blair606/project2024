@@ -1,31 +1,43 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import toast from 'react-hot-toast';
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const auth = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
+    // Validate required fields
     if (!email || !password) {
-      setError("Please fill in all fields.");
+      toast.error("Please fill in all fields.", {
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+        },
+      });
       return;
     }
 
     try {
-      await login(email, password);
+      const user = await auth.login(email.trim(), password);
       
-      // Get the user from context after login
-      const { user } = useAuth();
+      // Show success message
+      toast.success("Successfully signed in!", {
+        duration: 3000,
+        style: {
+          background: '#22c55e',
+          color: 'white',
+        },
+      });
       
       // Redirect based on user role
-      switch (user?.role) {
+      switch (user.role) {
         case 'student':
           navigate('/dashboard/student');
           break;
@@ -42,7 +54,16 @@ const SignIn: React.FC = () => {
           navigate('/');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast.error(
+        err instanceof Error ? err.message : 'Invalid email or password', 
+        {
+          duration: 4000,
+          style: {
+            background: '#ef4444',
+            color: 'white',
+          },
+        }
+      );
     }
   };
 
@@ -50,11 +71,6 @@ const SignIn: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Sign In</h2>
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -104,7 +120,7 @@ const SignIn: React.FC = () => {
             to="/signup"
             className="text-sm text-blue-600 hover:text-blue-500"
           >
-            Dont have an  account?
+            Don't have an account?
           </Link>
         </div>
       </div>

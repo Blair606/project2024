@@ -1,30 +1,27 @@
-import { useDispatch } from 'react-redux';
-import { setUser } from '../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import {
   UserGroupIcon,
   AcademicCapIcon,
   UserIcon,
-  Bars3Icon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../layout/Navbar';
 import Footer from '../layout/Footer';
 
 const HomePage = () => {
-  const dispatch = useDispatch();
+  const { login } = useAuth(); // Use the login function from AuthContext
   const navigate = useNavigate();
 
-  const handleLogin = (role: 'teacher' | 'student' | 'admin') => {
-    dispatch(setUser({
+  const handleLogin = (role) => {
+    const userData = {
       id: '1',
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       email: `test${role}@example.com`,
       role,
-      isAdmin: role === 'teacher'
-    }));
+      isAdmin: role === 'teacher',
+    };
 
+    login(userData); // Update the user state in context
     navigate(role === 'admin' ? '/admin' : `/dashboard/${role}`);
   };
 
@@ -57,7 +54,7 @@ const HomePage = () => {
       {/* Header */}
       <Navbar />
 
-      {/* hero section */}
+      {/* Hero Section */}
       <main className="flex-grow">
         <div className="max-w-[95%] mx-auto px-2 py-8 md:py-16">
           <div className="text-center mb-8 md:mb-16">
@@ -83,7 +80,7 @@ const HomePage = () => {
                 </div>
                 <div className="p-4 md:p-6">
                   <button
-                    onClick={() => handleLogin(role.path.split('/')[2] as 'teacher' | 'student' | 'admin')}
+                    onClick={() => handleLogin(role.path.split('/')[2])}
                     className="w-full bg-gray-900 text-white py-2 md:py-3 px-4 md:px-6 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     Access Portal

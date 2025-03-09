@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BookOpenIcon,
   CalendarIcon,
@@ -17,6 +17,9 @@ import {
   XMarkIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface DiscussionTopic {
   id: number;
@@ -38,8 +41,11 @@ interface DiscussionGroup {
 }
 
 const StudentDashboard = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('courses');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [currentUnits] = useState([
     {
@@ -369,6 +375,25 @@ const StudentDashboard = () => {
 
   const [selectedGroup, setSelectedGroup] = useState<DiscussionGroup | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<DiscussionTopic | null>(null);
+
+  // Add logout handler
+  const handleLogout = () => {
+    logout();
+    navigate('/signin');
+    toast.success('Successfully logged out');
+  };
+
+  // Add click outside handler to close profile menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showProfileMenu && !(event.target as Element).closest('.relative')) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -1243,22 +1268,58 @@ const StudentDashboard = () => {
             </div>
           </div>
 
-          {/* Right side - Actions and profile */}
+          {/* Modified right side with dropdown */}
           <div className="flex items-center justify-end flex-1 space-x-4">
             <div className="hidden sm:flex items-center space-x-2">
               <span className="text-sm text-gray-500">Spring 2024</span>
               <span className="text-gray-300">|</span>
             </div>
-            <div className="flex items-center border-l pl-4 ml-4">
-              <div className="hidden sm:block text-right mr-3">
-                <p className="text-sm font-medium text-gray-900">{profileData.name}</p>
-                <p className="text-xs text-gray-500">Student</p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-600">
-                  {profileData.name.split(' ').map(n => n[0]).join('')}
-                </span>
-              </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center border-l pl-4 ml-4 cursor-pointer"
+              >
+                <div className="hidden sm:block text-right mr-3">
+                  <p className="text-sm font-medium text-gray-900">{profileData.name}</p>
+                  <p className="text-xs text-gray-500">Student</p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span className="text-sm font-medium text-blue-600">
+                    {profileData.name.split(' ').map(n => n[0]).join('')}
+                  </span>
+                </div>
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                  <button
+                    onClick={() => {
+                      setActiveMenu('profile');
+                      setShowProfileMenu(false);
+                    }}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    View Profile
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveMenu('settings');
+                      setShowProfileMenu(false);
+                    }}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    Settings
+                  </button>
+                  <div className="border-t border-gray-100"></div>
+                  <button
+                    onClick={handleLogout}
+                    className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

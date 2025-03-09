@@ -14,17 +14,17 @@ import {
   VideoCameraIcon,
   ClockIcon,
   Cog6ToothIcon,
+  ArrowLeftOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import CreateAssignmentModal from '../../components/modals/CreateAssignmentModal';
 import CreateDiscussionGroupModal from '../../components/modals/CreateDiscussionGroupModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { Assignment } from '../../store/slices/assignmentSlice';
 import {
   LineChart, Line, PieChart, Pie, Cell,
 } from 'recharts';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface ClassData {
   id: number;
@@ -79,9 +79,17 @@ interface ScheduledClass {
   recording?: string;
 }
 
+interface Assignment {
+  id: number;
+  title: string;
+  courseId: number;
+  dueDate: string;
+  type: string;
+}
+
 const TeacherDashboard = () => {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState('overview');
   const [courses] = useState([
     { id: 1, name: 'Advanced Mathematics', students: 30, nextClass: '2:30 PM Today', progress: 75 },
@@ -184,10 +192,19 @@ const TeacherDashboard = () => {
       time: '10:00 AM - 11:30 AM',
       status: 'upcoming',
     },
-    // Add more sample classes...
   ]);
 
   const [isScheduleClassModalOpen, setIsScheduleClassModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/signin');
+      toast.success('Successfully logged out');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
+  };
 
   const navItems = [
     { id: 'overview', icon: BookOpenIcon, label: 'Overview' },
@@ -196,6 +213,13 @@ const TeacherDashboard = () => {
     { id: 'online-classes', icon: VideoCameraIcon, label: 'Online Classes' },
     { id: 'students', icon: UsersIcon, label: 'Students' },
     { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
+    { id: 'divider', type: 'divider' },
+    { 
+      id: 'logout', 
+      icon: ArrowLeftOnRectangleIcon, 
+      label: 'Logout',
+      onClick: handleLogout 
+    }
   ];
 
   const handleCreateAssignment = (assignmentData: Assignment) => {
@@ -245,7 +269,6 @@ const TeacherDashboard = () => {
             { unit: "Algebra", grade: 78, attendance: 85, submissions: 7 }
           ]
         },
-        // Add more students...
       ]
     },
     {
@@ -263,10 +286,8 @@ const TeacherDashboard = () => {
             { unit: "Algorithms", grade: 88, attendance: 92, submissions: 8 }
           ]
         },
-        // Add more students...
       ]
     },
-    // Add more classes...
   ]);
 
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -441,7 +462,6 @@ const TeacherDashboard = () => {
               </button>
             </div>
 
-            {/* Scheduled Classes List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {scheduledClasses.map((class_) => (
                 <div key={class_.id} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all">
@@ -503,7 +523,6 @@ const TeacherDashboard = () => {
           <div className="space-y-8">
             <h2 className="text-2xl font-semibold mb-6">Analytics Dashboard</h2>
 
-            {/* Class Selection */}
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <div className="flex space-x-4 mb-6">
                 <select
@@ -540,7 +559,6 @@ const TeacherDashboard = () => {
 
               {selectedClassId && !selectedStudentId && (
                 <>
-                  {/* Class Overview Charts */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white p-6 rounded-xl shadow-sm">
                       <h3 className="text-lg font-semibold mb-4">Class Performance</h3>
@@ -600,7 +618,6 @@ const TeacherDashboard = () => {
 
               {selectedStudentId && (
                 <>
-                  {/* Individual Student Analytics */}
                   <div className="space-y-6">
                     <h3 className="text-xl font-semibold">
                       Student Analysis: {selectedStudent?.name}
@@ -641,7 +658,6 @@ const TeacherDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Student Metrics Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {[
                         {
@@ -676,7 +692,6 @@ const TeacherDashboard = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              {/* Quick Stats */}
               <div className="bg-white p-6 rounded-xl shadow-sm">
                 <div className="flex items-center">
                   <UsersIcon className="w-12 h-12 text-blue-500" />
@@ -716,7 +731,6 @@ const TeacherDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Course Overview */}
               <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Your Courses</h2>
                 <div className="space-y-4">
@@ -741,7 +755,6 @@ const TeacherDashboard = () => {
                 </div>
               </div>
 
-              {/* Upcoming Tasks */}
               <div className="bg-white p-6 rounded-xl shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Pending Tasks</h2>
                 <div className="space-y-4">
@@ -763,7 +776,6 @@ const TeacherDashboard = () => {
               </div>
             </div>
 
-            {/* Class Overview Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {courses.map((classData) => (
                 <div 
@@ -785,7 +797,6 @@ const TeacherDashboard = () => {
               ))}
             </div>
 
-            {/* Analytics Section */}
             {selectedClassOverview && (
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-center mb-6">
@@ -798,7 +809,6 @@ const TeacherDashboard = () => {
                   </button>
                 </div>
 
-                {/* Class Performance Chart */}
                 {!showIndividualStudent ? (
                   <BarChart
                     width={1000}
@@ -814,7 +824,6 @@ const TeacherDashboard = () => {
                     <Bar dataKey="averagePerformance" fill="#8884d8" name="Class Average Performance" />
                   </BarChart>
                 ) : (
-                  // Individual Students Performance Chart
                   <BarChart
                     width={1000}
                     height={400}
@@ -840,7 +849,6 @@ const TeacherDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-40">
         <div className="flex items-center justify-between px-4 h-16">
-          {/* Left side - Menu button and logo */}
           <div className="flex items-center lg:w-64">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -853,7 +861,6 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          {/* Right side - Actions and profile */}
           <div className="flex items-center justify-end flex-1 space-x-4">
             <div className="hidden sm:flex items-center space-x-2">
               <span className="text-sm text-gray-500">Spring 2024</span>
@@ -903,25 +910,45 @@ const TeacherDashboard = () => {
           </div>
           <div className="h-0.5 bg-gray-100 w-full mb-6"></div>
           <nav className="space-y-2">
-            {navItems.map((item) => (
-              <a
-                key={item.id}
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveTab(item.id);
-                  setIsSidebarOpen(false);
-                }}
-                className={`flex items-center p-3 rounded-xl transition-all duration-200
-                  ${activeTab === item.id 
-                    ? 'bg-blue-500 text-white shadow-md' 
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                  }`}
-              >
-                <item.icon className={`w-5 h-5 mr-3 ${activeTab === item.id ? 'text-white' : ''}`} />
-                <span className="font-medium">{item.label}</span>
-              </a>
-            ))}
+            {navItems.map((item) => {
+              if (item.type === 'divider') {
+                return <div key="divider" className="h-0.5 bg-gray-100 my-4" />;
+              }
+
+              return (
+                <a
+                  key={item.id}
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (item.onClick) {
+                      item.onClick();
+                    } else {
+                      setActiveTab(item.id);
+                      setIsSidebarOpen(false);
+                    }
+                  }}
+                  className={`flex items-center p-3 rounded-xl transition-all duration-200
+                    ${item.id === 'logout' 
+                      ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
+                      : activeTab === item.id 
+                        ? 'bg-blue-500 text-white shadow-md' 
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                    }`}
+                >
+                  <item.icon 
+                    className={`w-5 h-5 mr-3 ${
+                      item.id === 'logout'
+                        ? 'text-red-600'
+                        : activeTab === item.id 
+                          ? 'text-white' 
+                          : ''
+                    }`} 
+                  />
+                  <span className="font-medium">{item.label}</span>
+                </a>
+              );
+            })}
           </nav>
         </div>
       </aside>
@@ -988,8 +1015,7 @@ const TeacherDashboard = () => {
         }}
       />
 
-      {/* Add Admin Access Button if user has admin privileges */}
-      {user?.isAdmin && (
+      {user?.role === 'admin' && (
         <div className="fixed bottom-4 right-4 z-50">
           <button
             onClick={() => navigate('/admin')}
