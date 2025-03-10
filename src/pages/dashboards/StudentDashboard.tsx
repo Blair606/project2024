@@ -74,6 +74,28 @@ interface ProfileData {
   updatedAt: string;
 }
 
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  instructor: string;
+  progress: number;
+  nextClass: string;
+  lastStudyPoint?: string;
+  resources: {
+    id: number;
+    title: string;
+    type: string;
+    downloadUrl: string;
+  }[];
+  assignments: {
+    id: number;
+    title: string;
+    dueDate: string;
+    status: string;
+  }[];
+}
+
 const StudentDashboard = () => {
   const { logout, getUserId } = useAuth();
   const navigate = useNavigate();
@@ -84,7 +106,7 @@ const StudentDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentUnits] = useState([
+  const [currentUnits] = useState<Unit[]>([
     {
       id: 1,
       code: 'CS 301',
@@ -92,6 +114,7 @@ const StudentDashboard = () => {
       instructor: 'Dr. Sarah Chen',
       progress: 65,
       nextClass: '2:30 PM Today',
+      lastStudyPoint: 'Neural Networks - Backpropagation',
       resources: [
         { id: 1, title: 'Introduction to ML Algorithms', type: 'pdf', downloadUrl: '#' },
         { id: 2, title: 'Python ML Libraries', type: 'doc', downloadUrl: '#' },
@@ -438,6 +461,12 @@ const StudentDashboard = () => {
     fetchProfileData();
   }, [getUserId]);
 
+  const handleProgressBarClick = (unit: Unit) => {
+    if (unit.lastStudyPoint) {
+      toast.success(`Resuming: ${unit.lastStudyPoint}`);
+    }
+  };
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'courses':
@@ -467,10 +496,16 @@ const StudentDashboard = () => {
                 </h2>
                 <div className="space-y-6">
                   {currentUnits.map(course => (
-                    <div key={course.id} className="border rounded-xl p-4 hover:shadow-md transition-all duration-200">
+                    <div 
+                      key={course.id} 
+                      className="border rounded-xl p-4 hover:shadow-md transition-all duration-200 group cursor-pointer"
+                      onClick={() => toast.success(`Opening ${course.name} dashboard`)}
+                    >
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="font-semibold text-lg text-gray-800">{course.name}</h3>
+                          <h3 className="font-semibold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">
+                            {course.name}
+                          </h3>
                           <p className="text-gray-600">Instructor: {course.instructor}</p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -481,12 +516,24 @@ const StudentDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Progress Bar */}
-                      <div className="mt-2 bg-gray-200 rounded-full h-2.5">
+                      {/* Interactive Progress Bar */}
+                      <div 
+                        className="mt-2 bg-gray-200 rounded-full h-2.5 cursor-pointer relative group"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProgressBarClick(course);
+                        }}
+                      >
                         <div
-                          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 relative"
                           style={{ width: `${course.progress}%` }}
-                        />
+                        >
+                          {course.lastStudyPoint && (
+                            <div className="opacity-0 group-hover:opacity-100 absolute right-0 -top-10 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap transform -translate-x-1/2 transition-opacity">
+                              Resume: {course.lastStudyPoint}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="mt-2 flex justify-between items-center mb-4">
                         <span className="text-sm text-gray-500">Progress</span>

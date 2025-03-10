@@ -107,14 +107,60 @@ interface ProfileData {
   updatedAt: string;
 }
 
+interface CourseUnit {
+  id: number;
+  name: string;
+  content: string;
+  resources: string[];
+  lastUpdated: string;
+}
+
+interface Course {
+  id: number;
+  name: string;
+  students: number;
+  nextClass: string;
+  progress: number;
+  units: CourseUnit[];
+}
+
 const TeacherDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [courses] = useState([
-    { id: 1, name: 'Advanced Mathematics', students: 30, nextClass: '2:30 PM Today', progress: 75 },
-    { id: 2, name: 'Computer Science', students: 25, nextClass: '10:00 AM Tomorrow', progress: 60 },
-    { id: 3, name: 'Physics 101', students: 28, nextClass: '1:15 PM Tomorrow', progress: 80 },
+  const [courses, setCourses] = useState<Course[]>([
+    {
+      id: 1,
+      name: 'Advanced Mathematics',
+      students: 30,
+      nextClass: '2:30 PM Today',
+      progress: 75,
+      units: [
+        {
+          id: 1,
+          name: 'Calculus I',
+          content: 'Introduction to limits and derivatives',
+          resources: ['Textbook Chapter 1', 'Practice Problems PDF'],
+          lastUpdated: new Date().toISOString(),
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: 'Computer Science',
+      students: 25,
+      nextClass: '10:00 AM Tomorrow',
+      progress: 60,
+      units: [],
+    },
+    {
+      id: 3,
+      name: 'Physics 101',
+      students: 28,
+      nextClass: '1:15 PM Tomorrow',
+      progress: 80,
+      units: [],
+    },
   ]);
 
   const [discussionGroups, setDiscussionGroups] = useState([
@@ -221,6 +267,11 @@ const TeacherDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<CourseUnit | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -834,23 +885,91 @@ const TeacherDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Your Courses</h2>
-                <div className="space-y-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Your Courses</h2>
+                </div>
+                <div className="space-y-6">
                   {courses.map(course => (
-                    <div key={course.id} className="border p-4 rounded-lg hover:border-blue-500 transition-colors">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium text-lg">{course.name}</h3>
-                        <span className="text-sm text-gray-500">{course.students} Students</span>
+                    <div key={course.id} className="border p-6 rounded-xl hover:border-blue-500 transition-colors">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="font-medium text-lg">{course.name}</h3>
+                          <span className="text-sm text-gray-500">{course.students} Students • Next Class: {course.nextClass}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-500">Progress: {course.progress}%</span>
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${course.progress}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center text-sm text-gray-500">
-                        <span>Next Class: {course.nextClass}</span>
-                        <span>Progress: {course.progress}%</span>
-                      </div>
-                      <div className="mt-2 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${course.progress}%` }}
-                        />
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-sm font-medium text-gray-700">Course Units</h4>
+                          <button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setIsUnitModalOpen(true);
+                            }}
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                          >
+                            Add Unit
+                          </button>
+                        </div>
+
+                        {course.units.length > 0 ? (
+                          <div className="grid gap-4">
+                            {course.units.map(unit => (
+                              <div
+                                key={unit.id}
+                                className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                                onClick={() => {
+                                  setSelectedUnit(unit);
+                                  setIsContentModalOpen(true);
+                                }}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h5 className="font-medium text-gray-900">{unit.name}</h5>
+                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{unit.content}</p>
+                                  </div>
+                                  <span className="text-xs text-gray-500">
+                                    Last updated: {new Date(unit.lastUpdated).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                {unit.resources.length > 0 && (
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {unit.resources.map((resource, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                                      >
+                                        {resource}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 bg-gray-50 rounded-lg">
+                            <p className="text-gray-500 text-sm">No units added yet</p>
+                            <button
+                              onClick={() => {
+                                setSelectedCourse(course);
+                                setIsUnitModalOpen(true);
+                              }}
+                              className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              Add your first unit
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -985,6 +1104,121 @@ const TeacherDashboard = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
+
+  const renderUnitModal = () => (
+    <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${
+      isUnitModalOpen ? 'block' : 'hidden'
+    }`}>
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Add New Unit</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          // Handle unit creation logic here
+          setIsUnitModalOpen(false);
+        }}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Unit Name</label>
+              <input
+                type="text"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Initial Content</label>
+              <textarea
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                rows={4}
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => setIsUnitModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Add Unit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderContentModal = () => (
+    <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${
+      isContentModalOpen ? 'block' : 'hidden'
+    }`}>
+      <div className="relative top-20 mx-auto p-5 border max-w-2xl shadow-lg rounded-md bg-white">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+          Edit Unit Content: {selectedUnit?.name}
+        </h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          // Handle content update logic here
+          setIsContentModalOpen(false);
+        }}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Content</label>
+              <textarea
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                rows={8}
+                defaultValue={selectedUnit?.content}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Resources</label>
+              <div className="mt-2 space-y-2">
+                {selectedUnit?.resources.map((resource, idx) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      defaultValue={resource}
+                    />
+                    <button type="button" className="text-red-600 hover:text-red-800">
+                      <XMarkIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                >
+                  <PlusIcon className="w-5 h-5 mr-1" />
+                  Add Resource
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => setIsContentModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1208,6 +1442,9 @@ const TeacherDashboard = () => {
           </button>
         </div>
       )}
+
+      {renderUnitModal()}
+      {renderContentModal()}
     </div>
   );
 };
