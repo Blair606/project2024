@@ -107,12 +107,23 @@ interface ProfileData {
   updatedAt: string;
 }
 
+interface Question {
+  id: number;
+  text: string;
+  choices: {
+    id: number;
+    text: string;
+    isCorrect: boolean;
+  }[];
+}
+
 interface CourseUnit {
   id: number;
   name: string;
   content: string;
   resources: string[];
   lastUpdated: string;
+  questions: Question[];
 }
 
 interface Course {
@@ -142,6 +153,7 @@ const TeacherDashboard = () => {
           content: 'Introduction to limits and derivatives',
           resources: ['Textbook Chapter 1', 'Practice Problems PDF'],
           lastUpdated: new Date().toISOString(),
+          questions: [],
         },
       ],
     },
@@ -1154,68 +1166,168 @@ const TeacherDashboard = () => {
   );
 
   const renderContentModal = () => (
-    <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${
-      isContentModalOpen ? 'block' : 'hidden'
-    }`}>
-      <div className="relative top-20 mx-auto p-5 border max-w-2xl shadow-lg rounded-md bg-white">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-          Edit Unit Content: {selectedUnit?.name}
-        </h3>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          // Handle content update logic here
-          setIsContentModalOpen(false);
-        }}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Content</label>
-              <textarea
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                rows={8}
-                defaultValue={selectedUnit?.content}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Resources</label>
-              <div className="mt-2 space-y-2">
-                {selectedUnit?.resources.map((resource, idx) => (
-                  <div key={idx} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      defaultValue={resource}
-                    />
-                    <button type="button" className="text-red-600 hover:text-red-800">
-                      <XMarkIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  className="flex items-center text-blue-600 hover:text-blue-800"
-                >
-                  <PlusIcon className="w-5 h-5 mr-1" />
-                  Add Resource
-                </button>
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isContentModalOpen ? '' : 'hidden'}`}>
+      <div className="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">Edit Unit Content</h2>
+          <button onClick={() => setIsContentModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        {selectedUnit && (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Unit Name</label>
+                <input
+                  type="text"
+                  value={selectedUnit.name}
+                  onChange={(e) => setSelectedUnit({ ...selectedUnit, name: e.target.value })}
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                <textarea
+                  rows={4}
+                  value={selectedUnit.content}
+                  onChange={(e) => setSelectedUnit({ ...selectedUnit, content: e.target.value })}
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Resources</label>
+                <input
+                  type="text"
+                  placeholder="Add resources (comma-separated)"
+                  value={selectedUnit.resources.join(', ')}
+                  onChange={(e) => setSelectedUnit({ ...selectedUnit, resources: e.target.value.split(',').map(r => r.trim()) })}
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
               </div>
             </div>
+
+            <div className="border-t pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Validation Questions</h3>
+                <button
+                  onClick={() => {
+                    const newQuestion: Question = {
+                      id: Date.now(),
+                      text: '',
+                      choices: [
+                        { id: Date.now() + 1, text: '', isCorrect: false },
+                        { id: Date.now() + 2, text: '', isCorrect: false },
+                        { id: Date.now() + 3, text: '', isCorrect: false },
+                        { id: Date.now() + 4, text: '', isCorrect: false }
+                      ]
+                    };
+                    setSelectedUnit({
+                      ...selectedUnit,
+                      questions: [...(selectedUnit.questions || []), newQuestion]
+                    });
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Add Question
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {selectedUnit.questions?.map((question, qIndex) => (
+                  <div key={question.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1 mr-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Question {qIndex + 1}</label>
+                        <input
+                          type="text"
+                          value={question.text}
+                          onChange={(e) => {
+                            const updatedQuestions = [...(selectedUnit.questions || [])];
+                            updatedQuestions[qIndex].text = e.target.value;
+                            setSelectedUnit({ ...selectedUnit, questions: updatedQuestions });
+                          }}
+                          className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="Enter your question"
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          const updatedQuestions = selectedUnit.questions.filter(q => q.id !== question.id);
+                          setSelectedUnit({ ...selectedUnit, questions: updatedQuestions });
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <XMarkIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {question.choices.map((choice, cIndex) => (
+                        <div key={choice.id} className="flex items-center space-x-3">
+                          <input
+                            type="radio"
+                            checked={choice.isCorrect}
+                            onChange={() => {
+                              const updatedQuestions = [...selectedUnit.questions];
+                              updatedQuestions[qIndex].choices = question.choices.map((c, i) => ({
+                                ...c,
+                                isCorrect: i === cIndex
+                              }));
+                              setSelectedUnit({ ...selectedUnit, questions: updatedQuestions });
+                            }}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <input
+                            type="text"
+                            value={choice.text}
+                            onChange={(e) => {
+                              const updatedQuestions = [...selectedUnit.questions];
+                              updatedQuestions[qIndex].choices[cIndex].text = e.target.value;
+                              setSelectedUnit({ ...selectedUnit, questions: updatedQuestions });
+                            }}
+                            className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            placeholder={`Choice ${cIndex + 1}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setIsContentModalOpen(false)}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const updatedCourses = courses.map(course => {
+                    if (course.id === selectedCourse?.id) {
+                      return {
+                        ...course,
+                        units: course.units.map(unit => 
+                          unit.id === selectedUnit.id ? selectedUnit : unit
+                        )
+                      };
+                    }
+                    return course;
+                  });
+                  setCourses(updatedCourses);
+                  setIsContentModalOpen(false);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
-          <div className="mt-6 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => setIsContentModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
+        )}
       </div>
     </div>
   );
@@ -1271,7 +1383,7 @@ const TeacherDashboard = () => {
                       setActiveTab('profile');
                       setShowProfileMenu(false);
                     }}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
                   >
                     View Profile
                   </button>
@@ -1280,14 +1392,14 @@ const TeacherDashboard = () => {
                       setActiveTab('settings');
                       setShowProfileMenu(false);
                     }}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
                   >
                     Settings
                   </button>
                   <div className="border-t border-gray-100"></div>
                   <button
                     onClick={handleLogout}
-                    className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                    className="block px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
                   >
                     Logout
                   </button>

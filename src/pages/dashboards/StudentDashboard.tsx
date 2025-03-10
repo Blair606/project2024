@@ -94,6 +94,17 @@ interface Unit {
     dueDate: string;
     status: string;
   }[];
+  questions: {
+    id: number;
+    text: string;
+    choices: {
+      id: number;
+      text: string;
+      isCorrect: boolean;
+    }[];
+    answered?: boolean;
+    correct?: boolean;
+  }[];
 }
 
 const StudentDashboard = () => {
