@@ -346,7 +346,7 @@ const StudentDashboard = () => {
     { id: 'online-classes', icon: VideoCameraIcon, label: 'Online Classes' },
   ];
 
-  const [scheduledClasses] = useState([
+  const [scheduledClasses,setScheduledClasses] = useState([
     {
       id: 1,
       title: 'Introduction to Machine Learning',
@@ -359,74 +359,38 @@ const StudentDashboard = () => {
   ]);
 
   // Add new state for discussions
-  const [discussionGroups] = useState<DiscussionGroup[]>([
-    {
-      id: 1,
-      name: 'ML Study Group',
-      course: 'Machine Learning',
-      courseCode: 'CS 301',
-      members: 15,
-      lastActive: '2 hours ago',
-      topics: [
-        { 
-          id: 1, 
-          title: 'Neural Networks Q&A',
-          lastMessage: 'Can someone explain backpropagation?',
-          replies: 8,
-          unread: 2,
-          timestamp: '1 hour ago'
-        },
-        { 
-          id: 2, 
-          title: 'Project Collaboration',
-          lastMessage: 'Looking for team members for the ML project',
-          replies: 12,
-          unread: 0,
-          timestamp: '3 hours ago'
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Network Security Discussion',
-      course: 'Network Security',
-      courseCode: 'CS 302',
-      members: 12,
-      lastActive: '30 minutes ago',
-      topics: [
-        {
-          id: 1,
-          title: 'Encryption Techniques',
-          lastMessage: 'Discussion about RSA implementation',
-          replies: 15,
-          unread: 3,
-          timestamp: '30 minutes ago'
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Neural Networks Lab Group',
-      course: 'Neural Networks',
-      courseCode: 'CS 303',
-      members: 10,
-      lastActive: '1 day ago',
-      topics: [
-        {
-          id: 1,
-          title: 'CNN Architecture Help',
-          lastMessage: 'Questions about convolutional layers',
-          replies: 5,
-          unread: 1,
-          timestamp: '1 day ago'
-        }
-      ]
-    }
-  ]);
+  const [discussionGroups,setDiscussionGroups] = useState<DiscussionGroup[]>([])
 
   const [selectedGroup, setSelectedGroup] = useState<DiscussionGroup | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<DiscussionTopic | null>(null);
 
+
+
+  const fetchScheduledClasses = async ()=>{
+    await axios.get('http://localhost:3000/api/online-classes')
+    .then((res)=>{
+      setScheduledClasses(res.data)
+    })
+    .catch((err)=>{
+      console.log(err)
+    })
+  }
+  const fetchDiscussionGroups = async ()=>{
+     await axios.get('http://localhost:3000/api/discussion-groups')
+    .then((res)=>{
+      console.log(res.data)
+      setDiscussionGroups(res.data)
+    })
+    .catch((err)=>{
+      console.log(err)
+    })
+
+  }
+
+  useEffect(()=>{
+    fetchDiscussionGroups()
+    fetchScheduledClasses()
+  },[])
   // Add logout handler
   const handleLogout = () => {
     logout();
@@ -1229,36 +1193,21 @@ const StudentDashboard = () => {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="font-semibold text-lg">{group.name}</h3>
+                          <h3 className="font-semibold text-lg">{group.title}</h3>
                           <p className="text-sm text-gray-500">{group.course}</p>
                         </div>
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                          {group.courseCode}
-                        </span>
+                        
                       </div>
                       
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex justify-between">
                           <span>Members:</span>
-                          <span className="font-medium">{group.members}</span>
+                          <span className="font-medium">{group.numberOfGroups}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Topics:</span>
-                          <span className="font-medium">{group.topics.length}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Last Active:</span>
-                          <span className="font-medium">{group.lastActive}</span>
-                        </div>
+
                       </div>
 
-                      {group.topics.some(topic => topic.unread > 0) && (
-                        <div className="mt-4 flex justify-end">
-                          <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
-                            {group.topics.reduce((acc, topic) => acc + topic.unread, 0)} new messages
-                          </span>
-                        </div>
-                      )}
+                      
                     </div>
                   ))}
                 </div>

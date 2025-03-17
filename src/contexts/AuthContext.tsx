@@ -7,6 +7,12 @@ interface User {
   role: 'student' | 'teacher' | 'parent' | 'admin';
 }
 
+interface StoredAuthData {
+  user: User;
+  token: string;
+  expiresAt: number;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -23,15 +29,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check for existing session and token
-    const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (storedUser && token) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-      // Set default authorization header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Check for existing session and validate expiration
+    const storedAuth = localStorage.getItem('authData');
+    if (storedAuth) {
+      const authData: StoredAuthData = JSON.parse(storedAuth);
+      const now = Date.now();
+      
+      if (now < authData.expiresAt) {
+        // Session is still valid
+        setUser(authData.user);
+        setIsAuthenticated(true);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${authData.token}`;
+      } else {
+        // Session has expired, clean up
+        logout();
+      }
     }
   }, []);
 
@@ -44,27 +56,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { user: userData, token } = response.data;
       
-      // Verify that userData has the required fields
       if (!userData._id) {
         throw new Error('User ID not provided in response');
       }
 
-      // Store token and set default header
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Store complete user data including ID
+      // Create user object
       const userToStore: User = {
         id: userData._id,
         email: userData.email,
         role: userData.role,
       };
+
+      // Calculate expiration (24 hours from now)
+      const expiresAt = Date.now() + (24 * 60 * 60 * 1000);
+
+      // Store auth data with expiration
+      const authData: StoredAuthData = {
+        user: userToStore,
+        token,
+        expiresAt,
+      };
       
+      // Store in localStorage
+      localStorage.setItem('authData', JSON.stringify(authData));
+      
+      // Set axios default header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Update state
       setUser(userToStore);
       setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(userToStore));
       
-      console.log('Logged in user ID:', userToStore.id); // For debugging
+      console.log('Logged in user ID:', userToStore.id);
       return userToStore;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -77,8 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem('authData');
     delete axios.defaults.headers.common['Authorization'];
   };
 

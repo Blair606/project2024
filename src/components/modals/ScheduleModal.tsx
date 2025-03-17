@@ -1,16 +1,26 @@
 import React from 'react'
-import { ClockIcon } from '@heroicons/react/24/outline'
-import {
- 
-    CalendarIcon,
+import { ClockIcon, CalendarIcon, PlusIcon } from '@heroicons/react/24/outline'
 
-    PlusIcon,
- 
-    
- 
-  } from '@heroicons/react/24/outline';
+interface ScheduledClass {
+  id: number;
+  title: string;
+  course: string;
+  date: string;
+  time: string;
+  status: 'upcoming' | 'live' | 'completed';
+  meetingLink?: string;
+  recording?: string;
+}
 
-export default function ScheduleModal() {
+interface ScheduleModalProps {
+  scheduledClasses: ScheduledClass[];
+  setIsScheduleClassModalOpen: (isOpen: boolean) => void;
+}
+
+export default function ScheduleModal({
+  scheduledClasses,
+  setIsScheduleClassModalOpen
+}: ScheduleModalProps) {
   return (
     <div>
         <div className="space-y-6">
@@ -58,19 +68,27 @@ export default function ScheduleModal() {
                   <div className="mt-4 flex space-x-2">
                     {class_.status === 'upcoming' ? (
                       <>
-                        <button className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <button 
+                          className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
                           Start Class
                         </button>
-                        <button className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100">
+                        <button 
+                          className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100"
+                        >
                           Cancel
                         </button>
                       </>
                     ) : class_.status === 'live' ? (
-                      <button className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+                      <button 
+                        className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                      >
                         Join Class
                       </button>
                     ) : (
-                      <button className="w-full px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                      <button 
+                        className="w-full px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                      >
                         View Recording
                       </button>
                     )}

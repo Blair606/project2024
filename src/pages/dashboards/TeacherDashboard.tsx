@@ -403,6 +403,23 @@ const TeacherDashboard = () => {
 
     setIsNotificationModalOpen(false);
   };
+  // Handler functions
+const handleStartClass = (classId: number) => {
+  // Implementation
+};
+
+const handleCancelClass = (classId: number) => {
+  setScheduledClasses(scheduledClasses.filter(c => c.id !== classId));
+};
+
+const handleJoinClass = (classId: number) => {
+  // Implementation
+};
+
+const handleViewRecording = (classId: number) => {
+  // Implementation
+};
+
 
   const renderContent = () => {
     switch (activeTab) {
@@ -541,7 +558,15 @@ const TeacherDashboard = () => {
 
       case 'online-classes':
         return (
-          <ScheduleModal />
+<ScheduleModal
+  scheduledClasses={scheduledClasses}
+  isScheduleClassModalOpen={isScheduleClassModalOpen}
+  setIsScheduleClassModalOpen={setIsScheduleClassModalOpen}
+  onStartClass={handleStartClass}
+  onCancelClass={handleCancelClass}
+  onJoinClass={handleJoinClass}
+  onViewRecording={handleViewRecording}
+/>
         );
 
       case 'analytics':
