@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import { UserIcon, AcademicCapIcon, HomeIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 function SignUp() {
@@ -14,26 +13,27 @@ function SignUp() {
     password: '',
     confirmPassword: '',
     enableMFA: false,
-    studentId: '', // For students
-    studyLevel: 'degree', // For students
-    school: 'SPAS', // For students
-    program: '', // For students
-    specialization: '', // For students
-    yearOfStudy: 1, // For students
-    semester: 1, // For students
-    dateOfBirth: '', // For students
-    nationalId: '', // For students
-    phone: '', // For students
-    address: '', // For students
-    guardians: [{ name: '', phone: '', relationship: '' }], // For students
-    emergencyContact: '', // For students
-    staffId: '', // For teachers
-    department: '', // For teachers
+    phone: '',
+    // Student-specific fields
+    studentId: '',
+    studyLevel: 'degree',
+    school: 'SPAS',
+    program: '',
+    specialization: '',
+    yearOfStudy: 1,
+    semester: 1,
+    dateOfBirth: '',
+    nationalId: '',
+    address: '',
+    guardians: [{ name: '', phone: '', relationship: '' }],
+    emergencyContact: '',
+    // Teacher-specific fields
+    staffId: '',
+    department: '',
+    // Parent-specific fields
+    studentIdForParent: '',
+    relationshipToStudent: '',
   });
-
-  const handleRoleChange = (e) => {
-    setRole(e.target.value);
-  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -68,99 +68,63 @@ function SignUp() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match!', {
         duration: 4000,
-        style: {
-          background: '#ef4444',
-          color: 'white',
-        },
+        style: { background: '#ef4444', color: 'white' },
       });
       return;
     }
 
-    // Format the data according to the backend schema
-    const formattedData = {
+    // Create user data object
+    const userData = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
       password: formData.password,
-      confirmPassword: formData.confirmPassword,
-      role: role, // Using the role state
+      role: role,
+      phone: formData.phone,
       enableMFA: formData.enableMFA,
-      // Include student-specific fields only if role is student
       ...(role === 'student' && {
         studentId: formData.studentId,
         studyLevel: formData.studyLevel,
         school: formData.school,
         program: formData.program,
         specialization: formData.specialization,
-        yearOfStudy: Number(formData.yearOfStudy), // Convert to number
-        semester: Number(formData.semester), // Convert to number
+        yearOfStudy: Number(formData.yearOfStudy),
+        semester: Number(formData.semester),
         dateOfBirth: formData.dateOfBirth,
         nationalId: formData.nationalId,
-        phone: formData.phone,
         address: formData.address,
-        guardians: formData.guardians.map(guardian => ({
-          name: guardian.name,
-          phone: guardian.phone,
-          relationship: guardian.relationship
-        })),
+        guardians: formData.guardians,
         emergencyContact: formData.emergencyContact,
       }),
-      // Include teacher-specific fields only if role is teacher
       ...(role === 'teacher' && {
         staffId: formData.staffId,
         department: formData.department,
-        phone: formData.phone, // Phone is common for both roles
+      }),
+      ...(role === 'parent' && {
+        studentIdForParent: formData.studentIdForParent,
+        relationshipToStudent: formData.relationshipToStudent,
       })
     };
 
-    try {
-      const response = await axios.post('http://localhost:3000/api/users/signup', formattedData);
-      console.log('Sign up successful:', response.data);
+    // Store user data in localStorage
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    users.push(userData);
+    localStorage.setItem('users', JSON.stringify(users));
 
-      // Show success toast
-      toast.success('Sign up successful! Redirecting...', {
-        duration: 3000,
-        style: {
-          background: '#22c55e',
-          color: 'white',
-        },
-      });
+    toast.success('Registration successful! Redirecting to login...', {
+      duration: 3000,
+      style: { background: '#22c55e', color: 'white' },
+    });
 
-      // Redirect based on role
-      setTimeout(() => {
-        switch (role) {
-          case 'student':
-            navigate('/dashboard/student');
-            break;
-          case 'teacher':
-            navigate('/dashboard/teacher');
-            break;
-          default:
-            navigate('/');
-        }
-      }, 2000);
-    } catch (error) {
-      console.error('Error signing up:', error);
-      
-      // Show error toast with specific message from backend if available
-      toast.error(
-        error.response?.data?.message || 'Sign up failed. Please try again.', 
-        {
-          duration: 4000,
-          style: {
-            background: '#ef4444',
-            color: 'white',
-          },
-        }
-      );
-    }
+    setTimeout(() => {
+      navigate('/signin');
+    }, 2000);
   };
 
   return (
@@ -182,7 +146,7 @@ function SignUp() {
               <label className="block text-sm font-medium text-gray-700">
                 Select Your Role
               </label>
-              <div className="mt-1 grid grid-cols-2 gap-3">
+              <div className="mt-1 grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setRole('student')}
@@ -206,6 +170,18 @@ function SignUp() {
                 >
                   <UserIcon className="h-5 w-5 mr-2" />
                   Teacher
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('parent')}
+                  className={`w-full flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${
+                    role === 'parent'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <HomeIcon className="h-5 w-5 mr-2" />
+                  Parent
                 </button>
               </div>
             </div>
@@ -590,6 +566,46 @@ function SignUp() {
                     required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
+                </div>
+              </div>
+            )}
+
+            {role === 'parent' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="studentIdForParent" className="block text-sm font-medium text-gray-700">
+                    Student ID
+                  </label>
+                  <input
+                    type="text"
+                    name="studentIdForParent"
+                    id="studentIdForParent"
+                    value={formData.studentIdForParent}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter your child's student ID"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="relationshipToStudent" className="block text-sm font-medium text-gray-700">
+                    Relationship to Student
+                  </label>
+                  <select
+                    name="relationshipToStudent"
+                    id="relationshipToStudent"
+                    value={formData.relationshipToStudent}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="">Select relationship</option>
+                    <option value="mother">Mother</option>
+                    <option value="father">Father</option>
+                    <option value="guardian">Guardian</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
               </div>
             )}
